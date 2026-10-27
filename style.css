@@ -2096,13 +2096,7 @@ h2 span {
 }
 
 body {
-  background-color: var(--cream);
-  background-image:
-    radial-gradient(ellipse at 12% 12%, rgba(37, 54, 255, .16), transparent 30%),
-    radial-gradient(ellipse at 88% 40%, rgba(255, 47, 63, .12), transparent 34%),
-    radial-gradient(ellipse at 24% 84%, rgba(255, 143, 224, .2), transparent 32%);
-  background-size: auto, auto, auto, 36px 36px, 36px 36px, 22px 22px;
-  background-attachment: fixed;
+  background: var(--cream) radial-gradient(rgba(11, 11, 26, .09) 1.2px, transparent 1.4px) 0 0/22px 22px;
   line-height: 1.65
 }
 

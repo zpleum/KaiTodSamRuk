@@ -162,6 +162,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: radial-gradient(circle at 70% 50%, rgba(255, 255, 255, .18), transparent 45%), repeating-radial-gradient(circle at 0 100%, transparent 0 40px, rgba(255, 255, 255, .05) 40px 42px)
 }
 
@@ -247,11 +248,11 @@ button {
 }
 
 .st-2 {
-  bottom: 10%;
+  bottom: 5%;
   left: 2%;
   background: #fff;
   color: var(--ink);
-  transform: rotate(6deg)
+  transform: rotate(-4deg)
 }
 
 .st-3 {
@@ -266,6 +267,14 @@ button {
   color: var(--ink);
   font-size: 26px;
   animation: spin 12s linear infinite
+}
+
+.st-4 {
+  top: 20%;
+  left: -6%;
+  background: var(--lime);
+  color: var(--ink);
+  transform: rotate(4deg)
 }
 
 @keyframes bob {

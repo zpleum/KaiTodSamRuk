@@ -516,6 +516,7 @@ const memeQuotes = [
 ];
 const burstEmojis = ["✨", "💥", "67", "🧠", "🫡", "🪩", "😭", "💅"];
 let burstCount = 0;
+let memeRainInterval = null;
 
 document.getElementById("meme-mode-toggle").addEventListener("click", event => {
   const enabled = document.body.classList.toggle("meme-overdrive");
@@ -523,7 +524,14 @@ document.getElementById("meme-mode-toggle").addEventListener("click", event => {
   event.currentTarget.querySelector("small").textContent = enabled ? "ON" : "OFF";
   event.currentTarget.querySelector(".meme-mode-toggle__spark").textContent = enabled ? "💥" : "✳";
   notify(enabled ? "67 MODE เปิดแล้ว · aura กำลังรั่วออกนอกจอ" : "ปิดโหมดปั่นแล้ว · กลับสู่โลกที่ต้องจ่ายบิล");
-  if (enabled) launchMemeBurst(innerWidth * .5, innerHeight * .45, 20);
+  clearInterval(memeRainInterval);
+  memeRainInterval = null;
+  if (enabled && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    launch67Rain(12);
+    memeRainInterval = setInterval(() => launch67Rain(6), 450);
+  } else if (!enabled) {
+    document.querySelectorAll(".rain").forEach(piece => piece.remove());
+  }
 });
 
 function launchMemeBurst(x, y, amount = 7) {
@@ -543,6 +551,19 @@ function launchMemeBurst(x, y, amount = 7) {
       piece.remove();
       burstCount--;
     }, { once: true });
+  }
+}
+
+function launch67Rain(amount = 26) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (let i = 0; i < amount; i++) {
+    const piece = document.createElement("span");
+    piece.className = "rain";
+    piece.textContent = ["🍗", "🍟", "67", "✨"][i % 4];
+    piece.style.left = `${Math.random() * 100}vw`;
+    piece.style.animationDelay = `${Math.random() * .9}s`;
+    document.body.append(piece);
+    setTimeout(() => piece.remove(), 3400);
   }
 }
 
@@ -594,7 +615,6 @@ document.addEventListener("keydown", event => {
     typedDigits = "";
     document.body.classList.remove("meme-overdrive");
     document.getElementById("meme-mode-toggle").click();
-    launchMemeBurst(innerWidth / 2, innerHeight / 2, 28);
   }
 });
 /* UX helpers: open status, floating cart pill, nav scroll-spy */
@@ -618,10 +638,21 @@ document.addEventListener("keydown", event => {
   pill.addEventListener("click", () => document.querySelector(".cart-panel").scrollIntoView({ behavior: "smooth", block: "center" }));
 
   const links = [...document.querySelectorAll(".nav__links a")];
-  const spy = new IntersectionObserver(entries => entries.forEach(entry => {
-    if (entry.isIntersecting) links.forEach(a => a.classList.toggle("is-active", a.hash === `#${entry.target.id}`));
-  }), { rootMargin: "-45% 0px -50% 0px" });
-  ["menu", "lab", "crew"].forEach(id => { const el = document.getElementById(id); if (el) spy.observe(el); });
+  const homeLink = links.find(a => a.hash === "#top");
+  const nav = document.querySelector(".nav");
+  const updateActiveNav = () => {
+    const marker = window.scrollY + nav.getBoundingClientRect().height + 1;
+    let activeLink = homeLink;
+    links.forEach(link => {
+      const target = document.getElementById(link.hash.slice(1));
+      if (target && target.getBoundingClientRect().top + window.scrollY <= marker) activeLink = link;
+    });
+    links.forEach(link => link.classList.toggle("is-active", link === activeLink));
+  };
+  updateActiveNav();
+  window.addEventListener("scroll", updateActiveNav, { passive: true });
+  window.addEventListener("hashchange", updateActiveNav);
+  window.addEventListener("load", updateActiveNav);
 })();
 
 /* ARCADE 67 — เกมหลัก + ระบบ Aura + ธีมปลดล็อก
@@ -637,15 +668,6 @@ document.addEventListener("keydown", event => {
   };
   const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
   const burst = (n = 24) => { if (typeof launchMemeBurst === "function") launchMemeBurst(innerWidth / 2, innerHeight * .45, n); };
-  function rain() {
-    if (reduced) return;
-    for (let i = 0; i < 26; i++) {
-      const s = document.createElement("span");
-      s.className = "rain"; s.textContent = ["🍗", "🍟", "67", "✨"][i % 4];
-      s.style.left = Math.random() * 100 + "vw"; s.style.animationDelay = Math.random() * .9 + "s";
-      document.body.append(s); setTimeout(() => s.remove(), 3400);
-    }
-  }
 
   /* ---------- Aura + ธีม ---------- */
   const titles = [[0, "มือใหม่หัดหิว"], [50, "สายกรอบ"], [150, "ตัวตึงร้านไก่"], [300, "เจ้าพ่อออร่า"], [600, "ตำนาน 67"]];
@@ -680,7 +702,7 @@ document.addEventListener("keydown", event => {
     <div class="aura-hud" aria-live="polite">
       <small>AURA ของคุณ</small><b id="aura-total">0</b><span id="aura-title"></span>
       <i class="aura-bar"><u id="aura-fill"></u></i>
-      <button type="button" id="rain-btn">🍗 ไก่ฝน</button>
+      <button type="button" id="rain-btn">🍗 ฝน 67</button>
     </div>
   </div>
   <div class="arcade__tabs" role="tablist" aria-label="เลือกเกม">
@@ -740,16 +762,6 @@ document.addEventListener("keydown", event => {
   <div class="theme-grid" id="theme-grid"></div>`;
   sec.after(themeSec);
 
-  const navLinks = $(".nav__links");
-  if (navLinks) {
-    navLinks.insertAdjacentHTML("beforeend", '<a href="#arcade">เกม</a>');
-    navLinks.insertAdjacentHTML("beforeend", '<a href="#themes">ธีม</a>');
-  }
-  const navArcade = $('.nav__links a[href="#arcade"]');
-  if (navArcade) new IntersectionObserver(es => es.forEach(e => navArcade.classList.toggle("is-active", e.isIntersecting)), { rootMargin: "-45% 0px -50% 0px" }).observe(sec);
-  const navThemes = $('.nav__links a[href="#themes"]');
-  if (navThemes) new IntersectionObserver(es => es.forEach(e => navThemes.classList.toggle("is-active", e.isIntersecting)), { rootMargin: "-45% 0px -50% 0px" }).observe(themeSec);
-
   /* ---------- Aura HUD ---------- */
   function renderAura() {
     $("#aura-total").textContent = aura.toLocaleString("th-TH");
@@ -763,7 +775,7 @@ document.addEventListener("keydown", event => {
     const before = titleOf(aura);
     aura += n; store.set("aura-total", aura); renderAura();
     say(`✨ ${why} · +${n} AURA`);
-    if (titleOf(aura) !== before) { setTimeout(() => { say(`🏆 เลื่อนขั้นเป็น “${titleOf(aura)}”`); rain(); }, 900); }
+    if (titleOf(aura) !== before) { setTimeout(() => { say(`🏆 เลื่อนขั้นเป็น “${titleOf(aura)}”`); launch67Rain(); }, 900); }
   }
   function renderThemes() {
     const grid = $("#theme-grid"); if (!grid) return;
@@ -785,7 +797,7 @@ document.addEventListener("keydown", event => {
     const b = e.target.closest("[data-theme]"); if (!b || b.disabled) return;
     applyTheme(b.dataset.theme); renderThemes(); say("เปลี่ยนธีมแล้ว"); burst(14);
   });
-  $("#rain-btn").addEventListener("click", rain);
+  $("#rain-btn").addEventListener("click", launch67Rain);
 
   /* ---------- แท็บ ---------- */
   const stoppers = [];

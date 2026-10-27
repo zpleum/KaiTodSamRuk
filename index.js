@@ -14,6 +14,25 @@ let showFavorites = false;
 let soundEnabled = false;
 let challengeIndex = 0;
 
+(() => {
+  const section = document.querySelector(".story-section");
+  if (!section) return;
+  const buttons = [...section.querySelectorAll("[data-story-view]")];
+  const fullStory = section.querySelector(".story-full");
+  const timeline = section.querySelector(".story-timeline");
+
+  buttons.forEach(button => button.addEventListener("click", () => {
+    const showTimeline = button.dataset.storyView === "timeline";
+    fullStory.hidden = showTimeline;
+    timeline.hidden = !showTimeline;
+    buttons.forEach(option => {
+      const active = option === button;
+      option.classList.toggle("is-active", active);
+      option.setAttribute("aria-pressed", String(active));
+    });
+  }));
+})();
+
 function readStore(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }

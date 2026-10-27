@@ -389,30 +389,36 @@ document.querySelectorAll("[data-rps]").forEach(button => button.addEventListene
 }));
 let reactionTimer;
 let reactionStarted = 0;
+let reactionWaiting = false;
 const reactionButton = document.getElementById("reaction-start");
 reactionButton.addEventListener("click", () => {
+  const result = document.getElementById("reaction-result");
+  if (reactionButton.classList.contains("is-ready")) {
+    const ms = Math.round(performance.now() - reactionStarted);
+    result.textContent = `${ms} ms — ${ms < 250 ? "นิ้วไวกว่าแสง!" : ms < 450 ? "เร็วใช้ได้ ไม่ได้แอบซ้อมใช่ไหม" : "ช้ากว่าเต่ากดลิฟต์นิดเดียว"}`;
+    reactionButton.classList.remove("is-ready");
+    reactionButton.textContent = "ลองอีกที";
+    return;
+  }
+  if (reactionWaiting) {
+    clearTimeout(reactionTimer);
+    reactionWaiting = false;
+    result.textContent = "ฟาวล์! รีบคลิกจนปุ่มยังตกใจ";
+    reactionButton.textContent = "ลองอีกที";
+    return;
+  }
+
   clearTimeout(reactionTimer);
-  reactionButton.disabled = true;
   reactionButton.classList.remove("is-ready");
+  reactionWaiting = true;
   reactionButton.textContent = "รอก่อน...";
-  document.getElementById("reaction-result").textContent = "อย่าเพิ่งคลิกนะ ใจเย็น ๆ ...";
+  result.textContent = "อย่าเพิ่งคลิกนะ ใจเย็น ๆ ...";
   reactionTimer = setTimeout(() => {
+    reactionWaiting = false;
     reactionStarted = performance.now();
-    reactionButton.disabled = false;
     reactionButton.classList.add("is-ready");
     reactionButton.textContent = "คลิกเดี๋ยวนี้!";
   }, 1200 + Math.random() * 2800);
-});
-reactionButton.addEventListener("click", () => {
-  if (reactionButton.classList.contains("is-ready")) {
-    const ms = Math.round(performance.now() - reactionStarted);
-    document.getElementById("reaction-result").textContent = `${ms} ms — ${ms < 250 ? "นิ้วไวกว่าแสง!" : ms < 450 ? "เร็วใช้ได้ ไม่ได้แอบซ้อมใช่ไหม" : "ช้ากว่าเต่ากดลิฟต์นิดเดียว"}`;
-    reactionButton.disabled = false;
-    reactionButton.classList.remove("is-ready");
-    reactionButton.textContent = "ลองอีกที";
-  } else if (reactionButton.disabled) {
-    document.getElementById("reaction-result").textContent = "ฟาวล์! รีบคลิกจนปุ่มยังตกใจ";
-  }
 });
 let secretNumber = Math.floor(Math.random() * 20) + 1;
 let guessesLeft = 5;
@@ -517,13 +523,14 @@ const memeQuotes = [
 const burstEmojis = ["✨", "💥", "67", "🧠", "🫡", "🪩", "😭", "💅"];
 let burstCount = 0;
 let memeRainInterval = null;
+const memeModeToggle = document.getElementById("meme-mode-toggle");
 
-document.getElementById("meme-mode-toggle").addEventListener("click", event => {
+memeModeToggle.addEventListener("click", event => {
   const enabled = document.body.classList.toggle("meme-overdrive");
   event.currentTarget.setAttribute("aria-pressed", String(enabled));
   event.currentTarget.querySelector("small").textContent = enabled ? "ON" : "OFF";
   event.currentTarget.querySelector(".meme-mode-toggle__spark").textContent = enabled ? "💥" : "✳";
-  notify(enabled ? "67 MODE เปิดแล้ว · aura กำลังรั่วออกนอกจอ" : "ปิดโหมดปั่นแล้ว · กลับสู่โลกที่ต้องจ่ายบิล");
+  notify(enabled ? "67 MODE เปิดแล้ว · กำลังรั่วออกนอกจอ" : "ปิดโหมดปั่นแล้ว · กลับสู่โลกที่ต้องจ่ายบิล");
   clearInterval(memeRainInterval);
   memeRainInterval = null;
   if (enabled && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -562,7 +569,7 @@ function launch67Rain(amount = 26) {
     piece.textContent = ["🍗", "🍟", "67", "✨"][i % 4];
     piece.style.left = `${Math.random() * 100}vw`;
     piece.style.animationDelay = `${Math.random() * .9}s`;
-    document.body.append(piece);
+    document.documentElement.append(piece);
     setTimeout(() => piece.remove(), 3400);
   }
 }
@@ -613,7 +620,6 @@ document.addEventListener("keydown", event => {
   digitReset = setTimeout(() => { typedDigits = ""; }, 1500);
   if (typedDigits === "67") {
     typedDigits = "";
-    document.body.classList.remove("meme-overdrive");
     document.getElementById("meme-mode-toggle").click();
   }
 });
@@ -709,6 +715,7 @@ document.addEventListener("keydown", event => {
     <button role="tab" aria-selected="true" data-tab="catch">🍗 รับไก่</button>
     <button role="tab" aria-selected="false" data-tab="memory">🃏 จับคู่ 3 รัก</button>
     <button role="tab" aria-selected="false" data-tab="fry">🔥 ทอดให้พอดี</button>
+    <button role="tab" aria-selected="false" data-tab="whack">🎯 จับไก่ไว</button>
   </div>
 
   <div class="cab" data-panel="catch">
@@ -742,6 +749,23 @@ document.addEventListener("keydown", event => {
       <div class="fry__labels"><span>ดิบ 🥶</span><span>กรอบพอดี</span><span>ไหม้ 💀</span></div>
       <p class="fry__msg" id="f-msg">กด “ยกไก่!” (หรือ Space) ตอนที่เข็มอยู่ตรงโซนกลาง</p>
       <button class="btn btn--red" id="f-go" type="button">เริ่มทอด ▶</button>
+    </div>
+  </div>
+
+  <div class="cab" data-panel="whack" hidden>
+    <div class="cab__bar">
+      <span>คะแนน <b id="w-score">0</b></span>
+      <span>เวลา <b id="w-time">30</b></span>
+      <span>คอมโบ <b id="w-combo">0</b></span>
+      <span>สถิติ <b id="w-best">0</b></span>
+    </div>
+    <div class="whack-game">
+      <p class="whack-instructions">แตะไก่ให้ไวเพื่อเก็บคะแนน! <b>67</b> โบนัส + 🌶️ หักคะแนน</p>
+      <div class="whack-grid" id="whack-grid" aria-label="ช่องเกมจับไก่">
+        ${Array.from({ length: 9 }, (_, i) => `<button class="whack-cell" type="button" data-cell="${i}" disabled aria-label="ช่องว่าง"></button>`).join("")}
+      </div>
+      <p id="w-status" class="whack-status" role="status" aria-live="polite">พร้อมแล้ว กดเริ่มเกมเพื่อเล่น 30 วินาที</p>
+      <button class="btn btn--lime" id="w-start" type="button">เริ่มเกม ▶</button>
     </div>
   </div>
 
@@ -797,7 +821,7 @@ document.addEventListener("keydown", event => {
     const b = e.target.closest("[data-theme]"); if (!b || b.disabled) return;
     applyTheme(b.dataset.theme); renderThemes(); say("เปลี่ยนธีมแล้ว"); burst(14);
   });
-  $("#rain-btn").addEventListener("click", launch67Rain);
+  $("#rain-btn").addEventListener("click", () => launch67Rain());
 
   /* ---------- แท็บ ---------- */
   const stoppers = [];
@@ -945,6 +969,135 @@ document.addEventListener("keydown", event => {
     go.addEventListener("click", () => go.dataset.mode === "stop" ? stop() : begin());
     addEventListener("keydown", e => { if (e.code === "Space" && running && !$("[data-panel=fry]").hidden) { e.preventDefault(); stop(); } });
     stoppers.push(() => { running = false; cancelAnimationFrame(raf); if (go.dataset.mode === "stop") { go.textContent = "เริ่มทอด ▶"; go.dataset.mode = "start"; round = 0; } });
+  })();
+
+  /* ---------- เกม 4: จับไก่ไว ---------- */
+  (() => {
+    const grid = $("#whack-grid"), cells = $$(".whack-cell", grid);
+    const startButton = $("#w-start"), status = $("#w-status");
+    let score = 0, combo = 0, misses = 0, best = store.get("best-whack", 0);
+    let running = false, activeIndex = -1, activeKind = "";
+    let clockTimer = 0, spawnTimer = 0, targetTimer = 0, endsAt = 0;
+    $("#w-best").textContent = best;
+
+    function clearTarget() {
+      clearTimeout(targetTimer);
+      targetTimer = 0;
+      if (activeIndex >= 0) {
+        const cell = cells[activeIndex];
+        cell.classList.remove("is-chicken", "is-golden", "is-pepper");
+        cell.textContent = "";
+        cell.disabled = true;
+        cell.setAttribute("aria-label", "ช่องว่าง");
+      }
+      activeIndex = -1;
+      activeKind = "";
+    }
+
+    function scheduleTarget() {
+      if (!running) return;
+      const delay = Math.max(360, 760 - Math.floor(score / 60) * 35);
+      spawnTimer = setTimeout(showTarget, delay);
+    }
+
+    function showTarget() {
+      if (!running) return;
+      clearTarget();
+      activeIndex = Math.floor(Math.random() * cells.length);
+      const roll = Math.random();
+      activeKind = roll < .12 ? "golden" : roll < .32 ? "pepper" : "chicken";
+      const cell = cells[activeIndex];
+      cell.classList.add(`is-${activeKind}`);
+      cell.textContent = activeKind === "golden" ? "67" : activeKind === "pepper" ? "🌶️" : "🍗";
+      cell.disabled = false;
+      cell.setAttribute("aria-label", activeKind === "pepper" ? "พริก ห้ามแตะ" : activeKind === "golden" ? "โบนัส 67 แตะเพื่อเก็บคะแนน" : "ไก่ แตะเพื่อเก็บคะแนน");
+      targetTimer = setTimeout(() => {
+        clearTarget();
+        misses++;
+        status.textContent = `ไก่หนีไปแล้ว! พลาด ${misses} ตัว`;
+        scheduleTarget();
+      }, 900);
+    }
+
+    function endRound() {
+      if (!running) return;
+      running = false;
+      clearInterval(clockTimer);
+      clearTimeout(spawnTimer);
+      clearTarget();
+      $("#w-time").textContent = "0";
+      const isBest = score > best;
+      if (isBest) {
+        best = score;
+        store.set("best-whack", best);
+        $("#w-best").textContent = best;
+      }
+      status.textContent = `หมดเวลา! ${score} คะแนน · พลาด ${misses} ตัว${isBest ? " · สถิติใหม่! 🎉" : ""}`;
+      startButton.disabled = false;
+      startButton.textContent = "เล่นอีกครั้ง ↻";
+      if (score > 0) addAura(Math.ceil(score / 10), "จับไก่ไว");
+    }
+
+    function startRound() {
+      clearInterval(clockTimer);
+      clearTimeout(spawnTimer);
+      clearTarget();
+      score = 0;
+      combo = 0;
+      misses = 0;
+      running = true;
+      endsAt = Date.now() + 30000;
+      $("#w-score").textContent = "0";
+      $("#w-combo").textContent = "0";
+      $("#w-time").textContent = "30";
+      status.textContent = "เริ่มแล้ว! แตะไก่และ 67 ให้ทัน";
+      startButton.disabled = true;
+      startButton.textContent = "กำลังเล่น...";
+      showTarget();
+      clockTimer = setInterval(() => {
+        const remaining = Math.max(0, endsAt - Date.now());
+        $("#w-time").textContent = String(Math.ceil(remaining / 1000));
+        if (remaining <= 0) endRound();
+      }, 100);
+    }
+
+    grid.addEventListener("click", event => {
+      const cell = event.target.closest(".whack-cell");
+      if (!running || !cell || cells[activeIndex] !== cell) return;
+      const hitKind = activeKind;
+      clearTarget();
+      if (hitKind === "pepper") {
+        score = Math.max(0, score - 8);
+        combo = 0;
+        status.textContent = "โดนพริก! −8 คะแนน · คอมโบถูกรีเซ็ต";
+      } else {
+        combo++;
+        const points = hitKind === "golden" ? 25 + Math.min(combo - 1, 10) : 10 + Math.min(combo - 1, 10);
+        score += points;
+        status.textContent = `${hitKind === "golden" ? "โบนัส 67!" : "เก็บไก่ได้!"} +${points} คะแนน`;
+      }
+      $("#w-score").textContent = String(score);
+      $("#w-combo").textContent = String(combo);
+      scheduleTarget();
+    });
+
+    startButton.addEventListener("click", startRound);
+    stoppers.push(() => {
+      if (!running) return;
+      running = false;
+      clearInterval(clockTimer);
+      clearTimeout(spawnTimer);
+      clearTarget();
+      score = 0;
+      combo = 0;
+      misses = 0;
+      $("#w-score").textContent = "0";
+      $("#w-combo").textContent = "0";
+      $("#w-time").textContent = "30";
+      startButton.disabled = false;
+      startButton.textContent = "เริ่มใหม่ ▶";
+      status.textContent = "หยุดเกมเมื่อเปลี่ยนแท็บ · กดเริ่มใหม่เพื่อเล่นอีกครั้ง";
+    });
   })();
 
   renderAura();

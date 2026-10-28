@@ -1043,7 +1043,7 @@ document.addEventListener("keydown", event => {
       <span>สถิติ <b id="w-best">0</b></span>
     </div>
     <div class="whack-game">
-      <p class="whack-instructions">แตะไก่ให้ไวเพื่อเก็บคะแนน! <b>67</b> โบนัส + 🌶️ หักคะแนน</p>
+      <p class="whack-instructions">แตะไก่ให้ไวเพื่อเก็บคะแนน! <b>67</b> โบนัส · ห้ามแตะ 🌶️</p>
       <div class="whack-grid" id="whack-grid" aria-label="ช่องเกมจับไก่">
         ${Array.from({ length: 9 }, (_, i) => `<button class="whack-cell" type="button" data-cell="${i}" disabled aria-label="ช่องว่าง"></button>`).join("")}
       </div>
@@ -1295,9 +1295,14 @@ document.addEventListener("keydown", event => {
       cell.disabled = false;
       cell.setAttribute("aria-label", activeKind === "pepper" ? "พริก ห้ามแตะ" : activeKind === "golden" ? "โบนัส 67 แตะเพื่อเก็บคะแนน" : "ไก่ แตะเพื่อเก็บคะแนน");
       targetTimer = setTimeout(() => {
+        const missedKind = activeKind;
         clearTarget();
-        misses++;
-        status.textContent = `ไก่หนีไปแล้ว! พลาด ${misses} ตัว`;
+        if (missedKind === "pepper") {
+          status.textContent = "หลบพริกได้! ไม่เสียคะแนน";
+        } else {
+          misses++;
+          status.textContent = `ไก่หนีไปแล้ว! พลาด ${misses} ตัว`;
+        }
         scheduleTarget();
       }, 900);
     }

@@ -4075,6 +4075,35 @@ body {
   box-decoration-break: clone
 }
 
+/* Keep the hero's collage secondary to its message on narrow screens. */
+@media(max-width:760px) {
+  .hero {
+    gap: 8px;
+    padding-block: 40px 52px
+  }
+
+  .hero__67 {
+    top: 78%;
+    right: -9%;
+    font-size: clamp(190px, 46vw, 340px);
+    opacity: .58
+  }
+
+  .hero__art {
+    height: clamp(250px, 58vw, 340px)
+  }
+}
+
+@media(max-width:520px) {
+  .hero {
+    padding-block: 34px 40px
+  }
+
+  .hero__art {
+    height: min(250px, 64vw)
+  }
+}
+
 @media(max-width:760px) {
   .story-section {
     margin-inline: 3%;

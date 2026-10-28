@@ -760,13 +760,19 @@ document.getElementById("oracle-question").addEventListener("keydown", event => 
 document.getElementById("compliment-button").addEventListener("click", () => {
   document.getElementById("compliment-answer").textContent = randomPick(compliments);
 });
+const luckyColors = [
+  { name: "ชมพูดาวอังคาร", hex: "#E86BA5" },
+  { name: "เขียววันเงินเดือนออก", hex: "#78C850" },
+  { name: "ฟ้าคนเกือบตื่น", hex: "#51B9E8" },
+  { name: "ม่วงผู้ชนะเดดไลน์", hex: "#9B68D4" },
+  { name: "ส้มพลังงานล้น", hex: "#F29A38" },
+  { name: "สีที่เครื่องปริ้นเตอร์ไม่ชอบ", hex: "#F2D34F" }
+];
 document.getElementById("color-button").addEventListener("click", () => {
-  const hue = Math.floor(Math.random() * 360);
-  const color = `hsl(${hue} 78% 62%)`;
-  const name = ["ชมพูดาวอังคาร", "เขียววันเงินเดือนออก", "ฟ้าคนเกือบตื่น", "ม่วงผู้ชนะเดดไลน์", "ส้มพลังงานล้น", "สีที่เครื่องปริ้นเตอร์ไม่ชอบ"][hue % 6];
+  const { name, hex } = luckyColors[Math.floor(Math.random() * luckyColors.length)];
   const panel = document.querySelector(".chaos-card--color");
-  panel.style.setProperty("--lucky-color", color);
-  document.getElementById("color-answer").textContent = `${name} · #${hue.toString(16).padStart(3, "0")}`;
+  panel.style.setProperty("--lucky-color", hex);
+  document.getElementById("color-answer").textContent = `${name} · ${hex}`;
 });
 document.getElementById("band-button").addEventListener("click", () => {
   document.getElementById("band-answer").textContent = `“${randomPick(bandWordsA)} ${randomPick(bandWordsB)}” — ทัวร์คอนเสิร์ตเริ่มที่ห้องนอนคุณ`;
@@ -1075,9 +1081,32 @@ document.addEventListener("keydown", event => {
   syncPill();
   pill.addEventListener("click", () => document.querySelector(".cart-panel").scrollIntoView({ behavior: "smooth", block: "center" }));
 
-  const links = [...document.querySelectorAll(".nav__links a")];
+  const links = [...document.querySelectorAll(".nav__links a:not(.nav__mobile-cta)")];
   const homeLink = links.find(a => a.hash === "#top");
   const nav = document.querySelector(".nav");
+  const navToggle = document.querySelector(".nav__toggle");
+  const mobileNav = window.matchMedia("(max-width: 760px)");
+  const closeMobileNav = () => {
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "เปิดเมนูหลัก");
+    nav.querySelector(".nav__links").classList.remove("is-open");
+  };
+  navToggle.addEventListener("click", () => {
+    const isOpen = navToggle.getAttribute("aria-expanded") !== "true";
+    navToggle.setAttribute("aria-expanded", String(isOpen));
+    navToggle.setAttribute("aria-label", isOpen ? "ปิดเมนูหลัก" : "เปิดเมนูหลัก");
+    nav.querySelector(".nav__links").classList.toggle("is-open", isOpen);
+  });
+  nav.querySelector(".nav__links").addEventListener("click", event => {
+    if (event.target.closest("a") && mobileNav.matches) closeMobileNav();
+  });
+  nav.addEventListener("keydown", event => {
+    if (event.key === "Escape" && navToggle.getAttribute("aria-expanded") === "true") {
+      closeMobileNav();
+      navToggle.focus();
+    }
+  });
+  mobileNav.addEventListener("change", closeMobileNav);
   const updateActiveNav = () => {
     const marker = window.scrollY + nav.getBoundingClientRect().height + 1;
     let activeLink = homeLink;

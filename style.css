@@ -143,6 +143,44 @@ button {
   text-decoration: underline wavy
 }
 
+.nav__toggle,
+.nav__mobile-cta {
+  display: none
+}
+
+.nav__toggle {
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  width: 48px;
+  height: 44px;
+  border: var(--bd);
+  border-radius: 12px;
+  background: var(--lime);
+  box-shadow: var(--sh)
+}
+
+.nav__toggle span {
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ink);
+  transition: transform .2s, opacity .2s
+}
+
+.nav__toggle[aria-expanded="true"] span:first-child {
+  transform: translateY(6px) rotate(45deg)
+}
+
+.nav__toggle[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0
+}
+
+.nav__toggle[aria-expanded="true"] span:last-child {
+  transform: translateY(-6px) rotate(-45deg)
+}
+
 /* hero */
 .hero {
   position: relative;
@@ -2685,6 +2723,44 @@ body {
 
   .nav {
     padding-block: 8px
+  }
+
+  .nav__toggle {
+    display: flex
+  }
+
+  .nav__desktop-cta {
+    display: none
+  }
+
+  .nav__links,
+  .nav__links.is-open {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 5% 18px;
+    background: var(--cream);
+    border-bottom: var(--bd);
+    box-shadow: 0 8px 14px rgba(11, 11, 26, .12)
+  }
+
+  .nav__links.is-open {
+    display: flex
+  }
+
+  .nav__links a {
+    padding: 10px 4px
+  }
+
+  .nav__links .nav__mobile-cta {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 6px
   }
 
   .cart-pill {

@@ -24,10 +24,14 @@
 
   <header class="nav">
     <a href="#top" class="logo" aria-label="ไก่ทอดสามรัก หน้าแรก"><b>67</b><span>ไก่ทอดสามรัก</span></a>
-    <nav class="nav__links" aria-label="เมนูหลัก">
+    <button class="nav__toggle" type="button" aria-label="เปิดเมนูหลัก" aria-expanded="false" aria-controls="primary-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav__links" id="primary-navigation" aria-label="เมนูหลัก">
       <a href="#top">หน้าหลัก</a><a href="#menu">เมนู</a><a href="#arcade">มินิเกม</a><a href="#themes">ธีม</a><a href="#crew">ทีมงาน</a>
+      <a href="#menu" class="btn btn--lime nav__mobile-cta">หิวแล้ว!</a>
     </nav>
-    <a href="#menu" class="btn btn--lime">หิวแล้ว!</a>
+    <a href="#menu" class="btn btn--lime nav__desktop-cta">หิวแล้ว!</a>
   </header>
 
   <main id="top">
@@ -498,7 +502,7 @@
       <p>ไก่ทอดกรอบบ ฟันแตก และความอร่อยระดับ 67</p>
     </div>
     <div>
-      <h4>เมนูลัด</h4><a href="#menu">เมนูทั้งหมด</a><a href="#arcade">มินิเกม</a><a href="#crew">ทีมงาน</a>
+      <h4>เมนูลัด</h4><a href="#top">หน้าหลัก</a><a href="#menu">เมนู</a><a href="#arcade">มินิเกม</a><a href="#theme">ธีม</a><a href="#crew">ทีมงาน</a>
     </div>
     <div>
       <h4>เวลาเปิด</h4>

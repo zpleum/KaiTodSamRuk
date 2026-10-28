@@ -4009,6 +4009,10 @@ body {
   max-width: 980px
 }
 
+.story-full p + p {
+  margin-top: 1.25em
+}
+
 .story-full[hidden],
 .story-timeline[hidden] {
   display: none

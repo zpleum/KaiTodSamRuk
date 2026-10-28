@@ -549,7 +549,7 @@ memeModeToggle.addEventListener("click", event => {
   event.currentTarget.setAttribute("aria-pressed", String(enabled));
   event.currentTarget.querySelector("small").textContent = enabled ? "ON" : "OFF";
   event.currentTarget.querySelector(".meme-mode-toggle__spark").textContent = enabled ? "💥" : "✳";
-  notify(enabled ? "67 MODE เปิดแล้ว · กำลังรั่วออกนอกจอ" : "ปิดโหมดปั่นแล้ว · กลับสู่โลกที่ต้องจ่ายบิล");
+  notify(enabled ? "67 MODE เปิดแล้ว" : "67 MODE ปิดแล้ว");
   clearInterval(memeRainInterval);
   memeRainInterval = null;
   if (enabled && !matchMedia("(prefers-reduced-motion: reduce)").matches) {

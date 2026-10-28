@@ -193,12 +193,12 @@
       <div class="menu-tools" aria-label="ตัวกรองเมนู">
         <label class="menu-search"><span>ค้นหาเมนู</span><input id="menu-search" type="search"
             placeholder="พิมพ์ชื่อเมนูที่อยากกิน..." autocomplete="off"></label>
-        <label class="menu-sort"><span>เรียงตาม</span><select id="menu-sort">
+        <div class="menu-sort"><span>เรียงตาม</span><select id="menu-sort" aria-label="เรียงตาม">
             <option value="featured">แนะนำ</option>
             <option value="price-asc">ราคาต่ำไปสูง</option>
             <option value="price-desc">ราคาสูงไปต่ำ</option>
             <option value="name">ชื่อเมนู ก-ฮ</option>
-          </select></label>
+          </select></div>
         <button class="menu-refresh btn btn--red" id="menu-refresh" type="button">โหลดเมนูใหม่ ↻</button>
       </div>
 
@@ -212,11 +212,11 @@
           <button type="button" id="party-plan">🍗 จัดเลี้ยง</button>
           <button type="button" id="compare-mode">⚖️ เทียบเมนู <span id="compare-count">0/2</span></button>
           <button type="button" id="sound-toggle" aria-pressed="false">🔇 เสียงปิด</button>
-          <label>โหมด<select id="mood-select">
+          <div class="fun-tools__select"><span>โหมด</span><select id="mood-select" aria-label="โหมด">
               <option value="default">🔥 หิวด่วน</option>
               <option value="budget">🪙 สายประหยัด</option>
               <option value="feast">👑 จัดหนัก</option>
-            </select></label>
+            </select></div>
           <button type="button" id="share-menu">🔗 แชร์เมนู</button>
           <button type="button" id="favorites-filter">♥ เมนูโปรด <span id="favorite-count">0</span></button>
         </div>

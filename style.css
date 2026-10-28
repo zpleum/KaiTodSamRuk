@@ -410,6 +410,12 @@ button {
   font: 700 13px var(--body)
 }
 
+.menu-tools .menu-sort {
+  display: grid;
+  gap: 6px;
+  font: 700 13px var(--body)
+}
+
 input,
 select {
   width: 100%;
@@ -430,7 +436,8 @@ select {
 }
 
 .fun-tools button,
-.fun-tools label {
+.fun-tools label,
+.fun-tools__select {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -450,7 +457,7 @@ select {
 }
 
 .fun-tools label input,
-.fun-tools label select {
+.fun-tools__select select {
   width: 84px;
   min-height: 30px;
   padding: 0 8px;
@@ -458,8 +465,156 @@ select {
   border-radius: 8px
 }
 
-.fun-tools label select {
+.fun-tools__select .custom-dropdown {
   width: auto
+}
+
+.fun-tools__select .custom-dropdown__trigger {
+  min-height: 30px;
+  padding: 0 8px;
+  border-width: 2px;
+  border-radius: 8px;
+  font: 600 14px var(--body)
+}
+
+.custom-dropdown {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0
+}
+
+.custom-dropdown__native {
+  display: none !important
+}
+
+.custom-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: var(--bd);
+  border-radius: 12px;
+  background: var(--cream);
+  color: var(--ink);
+  font: 600 15px var(--body);
+  text-align: left;
+  transition: background .15s, border-color .15s
+}
+
+.custom-dropdown__trigger:after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -2px;
+  transition: rotate .15s
+}
+
+.custom-dropdown__trigger[aria-expanded=true]:after {
+  rotate: 225deg;
+  translate: 0 2px
+}
+
+.custom-dropdown__trigger:hover:not(:disabled) {
+  background: var(--lime)
+}
+
+.custom-dropdown__trigger:disabled {
+  cursor: not-allowed;
+  opacity: .65
+}
+
+.custom-dropdown__list {
+  position: absolute;
+  z-index: 200;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: min(280px, 50vh);
+  overflow-y: auto;
+  padding: 5px;
+  border: var(--bd);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(11, 11, 26, .24)
+}
+
+.custom-dropdown__list[hidden] {
+  display: none
+}
+
+.custom-dropdown__list.opens-up {
+  top: auto;
+  bottom: calc(100% + 6px)
+}
+
+.custom-dropdown__option {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: var(--ink);
+  font: 500 14px var(--body);
+  cursor: pointer
+}
+
+.custom-dropdown__option:hover,
+.custom-dropdown__option.is-active,
+.custom-dropdown__option[aria-selected=true] {
+  background: var(--lime)
+}
+
+.custom-dropdown__option[aria-selected=true] {
+  font-weight: 700
+}
+
+.fun-tools .custom-dropdown {
+  width: auto;
+  flex: 1;
+  min-width: 90px
+}
+
+.game-difficulty .custom-dropdown {
+  width: auto
+}
+
+.game-difficulty .custom-dropdown__trigger {
+  min-width: 120px;
+  min-height: 38px;
+  padding: 4px 10px;
+  border: 2px solid var(--lime);
+  border-radius: 10px;
+  background: #fff;
+  font: 600 14px var(--body)
+}
+
+.game-difficulty .custom-dropdown__trigger:hover:not(:disabled) {
+  background: var(--lime)
+}
+
+.game-difficulty .custom-dropdown__trigger.is-67 {
+  border-color: #ffd43a;
+  background: #ffd43a;
+  color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(255, 212, 58, .25)
+}
+
+.game-difficulty .custom-dropdown__option[data-value="67"] {
+  background: #fff1b8;
+  font-weight: 800
+}
+
+.game-difficulty .custom-dropdown__option[data-value="67"].is-active,
+.game-difficulty .custom-dropdown__option[data-value="67"][aria-selected=true] {
+  background: #ffd43a
 }
 
 .fun-message {
@@ -1429,19 +1584,46 @@ body.meme-overdrive:after {
   }
 }
 
-.meme-overdrive .chaos-card:nth-child(odd),
-.meme-overdrive .menu-table tbody tr {
-  animation: wob 2.4s ease-in-out infinite
+body.meme-overdrive :is(.hero__copy, .stats>div, .story-section__heading, .story-card, .story-timeline__step, .combo, .menu-featured-note, .menu-manager, .menu-tools, .tools-box, .menu-table tbody tr:not(.menu-loading), .console-head, .console-main>*, .console-photo img, .console-ticker, .fun-lab>*, .arcade__head>*, .arcade__tabs button, .cab, .arcade-card, .themes-section__head, .theme, .feature>*, .photo-roll__card, .night>*, .steps>*, .bento>*, .reviews blockquote, .faq details, .finale>*, .footer>*) {
+  animation: meme-67-jelly .96s cubic-bezier(.36, 0, .24, 1) infinite;
+  transform-origin: center
 }
 
-.meme-overdrive .chaos-card:nth-child(even) {
-  animation: wob 3s ease-in-out infinite reverse
+body.meme-overdrive :is(.nav>*, main>*, .footer>*) {
+  animation: meme-67-jelly .96s cubic-bezier(.36, 0, .24, 1) infinite;
+  transform-origin: center
 }
 
-@keyframes wob {
-  50% {
-    transform: translateY(-6px) rotate(1.5deg)
-  }
+body.meme-overdrive :is(.hero__art, .stats>div:nth-child(even), .story-card:nth-child(even), .story-timeline__step:nth-child(even), .combo:nth-child(even), .menu-table tbody tr:not(.menu-loading):nth-child(even), .console-main>*:nth-child(even), .fun-lab>*:nth-child(even), .arcade__tabs button:nth-child(even), .arcade-card:nth-child(even), .theme:nth-child(even), .feature>*:nth-child(even), .photo-roll__card:nth-child(even), .night>*:nth-child(even), .steps>*:nth-child(even), .bento>*:nth-child(even), .reviews blockquote:nth-child(even), .faq details:nth-child(even), .finale>*:nth-child(even), .footer>*:nth-child(even)) {
+  animation-duration: .96s;
+  animation-name: meme-67-jelly-reverse;
+  animation-timing-function: cubic-bezier(.36, 0, .24, 1)
+}
+
+body.meme-overdrive :is(.nav>*:nth-child(even), main>*:nth-child(even)) {
+  animation-duration: .96s;
+  animation-name: meme-67-jelly-reverse;
+  animation-timing-function: cubic-bezier(.36, 0, .24, 1)
+}
+
+@keyframes meme-67-jelly {
+  0%, 100% { transform: translate(-14px, -15px) rotate(-5deg) scale(1.08, .92) }
+  14% { transform: translate(-8px, 4px) rotate(-2deg) scale(.92, 1.08) }
+  28% { transform: translate(2px, -6px) rotate(2deg) scale(1.08, .92) }
+  42% { transform: translate(10px, 6px) rotate(4deg) scale(.93, 1.07) }
+  57% { transform: translate(14px, 15px) rotate(5deg) scale(1.08, .92) }
+  71% { transform: translate(7px, -3px) rotate(2deg) scale(.92, 1.08) }
+  85% { transform: translate(-4px, 8px) rotate(-3deg) scale(1.07, .93) }
+}
+
+@keyframes meme-67-jelly-reverse {
+  0%, 100% { transform: translate(14px, 15px) rotate(5deg) scale(1.08, .92) }
+  14% { transform: translate(8px, -4px) rotate(2deg) scale(.92, 1.08) }
+  28% { transform: translate(-2px, 6px) rotate(-2deg) scale(1.08, .92) }
+  42% { transform: translate(-10px, -6px) rotate(-4deg) scale(.93, 1.07) }
+  57% { transform: translate(-14px, -15px) rotate(-5deg) scale(1.08, .92) }
+  71% { transform: translate(-7px, 3px) rotate(-2deg) scale(.92, 1.08) }
+  85% { transform: translate(4px, -8px) rotate(3deg) scale(1.07, .93) }
 }
 
 body[data-mood=budget] .menu-table td:nth-child(3) {
@@ -2868,6 +3050,11 @@ body {
   overflow: hidden
 }
 
+.arcade.is-dropdown-open {
+  z-index: 20;
+  overflow: visible
+}
+
 .arcade:before {
   content: "";
   position: absolute;
@@ -3007,6 +3194,34 @@ body {
   margin-left: 4px;
   color: var(--lime);
   font: 700 24px var(--disp)
+}
+
+.game-difficulty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font: 600 14px var(--body)
+}
+
+.game-difficulty select {
+  min-height: 38px;
+  padding: 4px 30px 4px 10px;
+  border: 2px solid var(--lime);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 14px var(--body)
+}
+
+.game-difficulty select:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 3px
+}
+
+.game-difficulty select:disabled {
+  cursor: not-allowed;
+  opacity: .65
 }
 
 .btn--sm {
@@ -3150,6 +3365,7 @@ body {
 }
 
 .mc__b {
+  position: relative;
   transform: rotateY(180deg);
   background: #fff
 }
@@ -3158,6 +3374,22 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover
+}
+
+.mc__variant {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  background: var(--lime);
+  color: var(--ink);
+  font: 700 12px/1 var(--disp)
 }
 
 .mc.is-done .mc__b {

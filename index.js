@@ -13,6 +13,154 @@ let compareIds = [];
 let showFavorites = false;
 let soundEnabled = false;
 let challengeIndex = 0;
+const is67Mode = () => document.body.classList.contains("meme-overdrive");
+
+function initializeCustomDropdowns(root = document) {
+  root.querySelectorAll("select:not([data-custom-dropdown])").forEach(select => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "custom-dropdown";
+    wrapper.dataset.customDropdown = "";
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "custom-dropdown__trigger";
+    trigger.setAttribute("role", "combobox");
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.id = `${select.id || "dropdown"}-trigger`;
+    const list = document.createElement("div");
+    list.className = "custom-dropdown__list";
+    list.id = `${select.id || "dropdown"}-options`;
+    list.setAttribute("role", "listbox");
+    list.hidden = true;
+    trigger.setAttribute("aria-controls", list.id);
+
+    const label = select.closest("label") || select.parentElement;
+    const labelText = label?.querySelector(":scope > span")?.textContent.trim()
+      || [...(label?.childNodes || [])].filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent).join("").trim();
+    trigger.setAttribute("aria-label", labelText || select.getAttribute("aria-label") || "เลือกค่า");
+
+    function chooseOption(value, restoreFocus = true) {
+      if (select.value !== value) {
+        select.value = value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      close(restoreFocus);
+    }
+
+    const options = [...select.options].map((option, index) => {
+      const item = document.createElement("div");
+      item.className = "custom-dropdown__option";
+      item.id = `${list.id}-${index}`;
+      item.dataset.value = option.value;
+      item.textContent = option.textContent.trim();
+      item.setAttribute("role", "option");
+      item.tabIndex = -1;
+      list.append(item);
+      item.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        chooseOption(option.value);
+      });
+      item.addEventListener("click", event => {
+        event.preventDefault();
+        chooseOption(option.value);
+      });
+      item.addEventListener("pointermove", () => setActive(index));
+      return item;
+    });
+
+    let activeIndex = Math.max(0, [...select.options].findIndex(option => option.value === select.value));
+    function sync() {
+      const selectedIndex = [...select.options].findIndex(option => option.value === select.value);
+      trigger.textContent = select.options[selectedIndex]?.textContent.trim() || "";
+      trigger.disabled = select.disabled;
+      trigger.classList.toggle("is-67", select.value === "67");
+      options.forEach((option, index) => option.setAttribute("aria-selected", String(index === selectedIndex)));
+    }
+    function setActive(index) {
+      activeIndex = (index + options.length) % options.length;
+      options.forEach((option, optionIndex) => option.classList.toggle("is-active", optionIndex === activeIndex));
+      trigger.setAttribute("aria-activedescendant", options[activeIndex].id);
+    }
+    function open() {
+      if (select.disabled) return;
+      list.hidden = false;
+      const bounds = trigger.getBoundingClientRect();
+      const spaceAbove = bounds.top;
+      const spaceBelow = window.innerHeight - bounds.bottom;
+      const listHeight = Math.min(list.scrollHeight || options.length * 40, window.innerHeight * .5);
+      const opensUp = wrapper.closest(".arcade") || (spaceBelow < listHeight + 12 && spaceAbove > spaceBelow);
+      list.classList.toggle("opens-up", Boolean(opensUp));
+      wrapper.closest(".arcade")?.classList.add("is-dropdown-open");
+      trigger.setAttribute("aria-expanded", "true");
+      activeIndex = Math.max(0, [...select.options].findIndex(option => option.value === select.value));
+      setActive(activeIndex);
+    }
+    function close(restoreFocus = false) {
+      list.hidden = true;
+      wrapper.closest(".arcade")?.classList.remove("is-dropdown-open");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.removeAttribute("aria-activedescendant");
+      options.forEach(option => option.classList.remove("is-active"));
+      if (restoreFocus) trigger.focus();
+    }
+    function commitActive() {
+      const option = select.options[activeIndex];
+      if (!option || option.disabled) return;
+      chooseOption(option.value, false);
+    }
+
+    trigger.addEventListener("click", event => {
+      event.preventDefault();
+      if (list.hidden) open();
+      else close();
+    });
+    trigger.addEventListener("keydown", event => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (list.hidden) open();
+        else setActive(activeIndex + (event.key === "ArrowDown" ? 1 : -1));
+      } else if (event.key === "Home" || event.key === "End") {
+        event.preventDefault();
+        if (list.hidden) open();
+        setActive(event.key === "Home" ? 0 : options.length - 1);
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (list.hidden) open();
+        else commitActive();
+      } else if (event.key === "Escape" && !list.hidden) {
+        event.preventDefault();
+        close();
+      }
+    });
+    trigger.addEventListener("blur", () => close());
+    document.addEventListener("pointerdown", event => {
+      if (!wrapper.contains(event.target)) close();
+    });
+    select.addEventListener("change", sync);
+    const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+    const disabledDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "disabled");
+    Object.defineProperty(select, "value", {
+      configurable: true,
+      get() { return valueDescriptor.get.call(this); },
+      set(value) { valueDescriptor.set.call(this, value); sync(); }
+    });
+    Object.defineProperty(select, "disabled", {
+      configurable: true,
+      get() { return disabledDescriptor.get.call(this); },
+      set(value) { disabledDescriptor.set.call(this, value); sync(); }
+    });
+
+    select.dataset.customDropdown = "true";
+    select.classList.add("custom-dropdown__native");
+    select.tabIndex = -1;
+    select.setAttribute("aria-hidden", "true");
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.append(select, trigger, list);
+    sync();
+  });
+}
+
+initializeCustomDropdowns();
 
 (() => {
   const section = document.querySelector(".story-section");
@@ -813,7 +961,8 @@ memeModeToggle.addEventListener("click", event => {
   event.currentTarget.setAttribute("aria-pressed", String(enabled));
   event.currentTarget.querySelector("small").textContent = enabled ? "ON" : "OFF";
   event.currentTarget.querySelector(".meme-mode-toggle__spark").textContent = enabled ? "💥" : "✳";
-  notify(enabled ? "67 MODE เปิดแล้ว" : "67 MODE ปิดแล้ว");
+  notify(enabled ? "67 MODE เปิดแล้ว · เว็บเริ่มเต้นท่า 67!" : "67 MODE ปิดแล้ว · เว็บหยุดเต้นแล้ว");
+  document.dispatchEvent(new CustomEvent("arcade:67-mode-change", { detail: { enabled } }));
   clearInterval(memeRainInterval);
   memeRainInterval = null;
   if (enabled && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -987,7 +1136,7 @@ document.addEventListener("keydown", event => {
   sec.className = "arcade"; sec.id = "arcade"; sec.setAttribute("aria-labelledby", "arcade-t");
   sec.innerHTML = `
   <div class="arcade__head">
-    <div><p class="tag">ARCADE · เล่นสะสม AURA ปลดล็อกธีม</p><h2 id="arcade-t">ARCADE<span>67</span></h2></div>
+    <div><p class="tag">ARCADE · 5 ระดับ · เปิด 67 MODE เพิ่มความโหด</p><h2 id="arcade-t">ARCADE<span>67</span></h2></div>
     <div class="aura-hud" aria-live="polite">
       <small>AURA ของคุณ</small><b id="aura-total">0</b><span id="aura-title"></span>
       <i class="aura-bar"><u id="aura-fill"></u></i>
@@ -1002,7 +1151,7 @@ document.addEventListener("keydown", event => {
   </div>
 
   <div class="cab" data-panel="catch">
-    <div class="cab__bar"><span>คะแนน <b id="c-score">0</b></span><span>เวลา <b id="c-time">30</b></span><span>สถิติ <b id="c-best">0</b></span></div>
+    <div class="cab__bar"><span>คะแนน <b id="c-score">0</b></span><span>เวลา <b id="c-time">30</b></span><span>สถิติ <b id="c-best">0</b></span><div class="game-difficulty"><span>ระดับ</span><select id="c-difficulty" aria-label="ระดับรับไก่"><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="extreme">ยากมาก</option><option value="67">67</option></select></div></div>
     <div class="cab__stage">
       <canvas id="catch-cv" width="720" height="440" aria-label="เกมรับไก่"></canvas>
       <div class="ov" id="c-ov">
@@ -1019,13 +1168,13 @@ document.addEventListener("keydown", event => {
   </div>
 
   <div class="cab" data-panel="memory" hidden>
-    <div class="cab__bar"><span>ครั้งที่เปิด <b id="m-moves">0</b></span><span>เวลา <b id="m-time">0</b>s</span><span>ดีที่สุด <b id="m-best">–</b></span><button class="btn btn--lime btn--sm" id="m-reset" type="button">สับไพ่ใหม่ ↻</button></div>
+    <div class="cab__bar"><span>ครั้งที่เปิด <b id="m-moves">0</b></span><span><span id="m-time-label">เวลา</span> <b id="m-time">0</b>s</span><span>ดีที่สุด <b id="m-best">–</b></span><div class="game-difficulty"><span>ระดับ</span><select id="m-difficulty" aria-label="ระดับจับคู่"><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="extreme">ยากมาก</option><option value="67">67</option></select></div><button class="btn btn--lime btn--sm" id="m-reset" type="button">สับไพ่ใหม่ ↻</button></div>
     <div class="mem" id="mem" aria-label="เกมจับคู่"></div>
     <p class="cab__hint" id="m-msg">จับคู่รูปให้ครบ 6 คู่ ยิ่งเปิดน้อย ยิ่งได้ AURA เยอะ</p>
   </div>
 
   <div class="cab" data-panel="fry" hidden>
-    <div class="cab__bar"><span>รอบ <b id="f-round">0</b>/5</span><span>คะแนน <b id="f-score">0</b></span><span>ดีที่สุด <b id="f-best">0</b></span></div>
+    <div class="cab__bar"><span>รอบ <b id="f-round">0</b>/5</span><span>คะแนน <b id="f-score">0</b></span><span>ดีที่สุด <b id="f-best">0</b></span><div class="game-difficulty"><span>ระดับ</span><select id="f-difficulty" aria-label="ระดับทอดให้พอดี"><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="extreme">ยากมาก</option><option value="67">67</option></select></div></div>
     <div class="fry">
       <div class="fry__chick" id="f-chick" aria-hidden="true">🍗</div>
       <div class="fry__bar" id="f-bar"><i class="fry__zone" id="f-zone"></i><b class="fry__cur" id="f-cur"></b></div>
@@ -1041,6 +1190,7 @@ document.addEventListener("keydown", event => {
       <span>เวลา <b id="w-time">30</b></span>
       <span>คอมโบ <b id="w-combo">0</b></span>
       <span>สถิติ <b id="w-best">0</b></span>
+      <div class="game-difficulty"><span>ระดับ</span><select id="w-difficulty" aria-label="ระดับจับไก่ไว"><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="extreme">ยากมาก</option><option value="67">67</option></select></div>
     </div>
     <div class="whack-game">
       <p class="whack-instructions">แตะไก่ให้ไวเพื่อเก็บคะแนน! <b>67</b> โบนัส · ห้ามแตะ 🌶️</p>
@@ -1055,6 +1205,7 @@ document.addEventListener("keydown", event => {
 `;
   const lab = $("#lab");
   (lab || $("main")).before(sec);
+  initializeCustomDropdowns(sec);
 
   /* ---------- สร้าง section ธีม แยกจาก arcade ---------- */
   const themeSec = document.createElement("section");
@@ -1108,6 +1259,16 @@ document.addEventListener("keydown", event => {
 
   /* ---------- แท็บ ---------- */
   const stoppers = [];
+  function setupDifficulty(id, storageKey, onChange) {
+    const select = $("#" + id);
+    const saved = store.get(storageKey, "medium");
+    select.value = ["easy", "medium", "hard", "extreme", "67"].includes(saved) ? saved : "medium";
+    select.addEventListener("change", () => {
+      store.set(storageKey, select.value);
+      if (onChange) onChange(select.value);
+    });
+    return select;
+  }
   $$(".arcade__tabs [role=tab]", sec).forEach(tab => tab.addEventListener("click", () => {
     stoppers.forEach(f => f());
     $$(".arcade__tabs [role=tab]", sec).forEach(t => t.setAttribute("aria-selected", String(t === tab)));
@@ -1117,10 +1278,18 @@ document.addEventListener("keydown", event => {
   /* ---------- เกม 1: รับไก่ (canvas) ---------- */
   (() => {
     const cv = $("#catch-cv"), ctx = cv.getContext("2d"), W = 720, H = 440, ov = $("#c-ov");
+    const difficulty = setupDifficulty("c-difficulty", "difficulty-catch");
+    const settings = {
+      easy: { speed: .75, spawn: .82, acceleration: .006 },
+      medium: { speed: 1, spawn: .62, acceleration: .012 },
+      hard: { speed: 1.35, spawn: .44, acceleration: .016 },
+      extreme: { speed: 1.7, spawn: .3, acceleration: .02 },
+      67: { speed: 2.3, spawn: .18, acceleration: .025 }
+    };
     const src = { nu: "imgs/nobg/pnu1.png", sky: "imgs/nobg/psky1.png", yell: "imgs/nobg/pyell1.png" };
     const img = {}; Object.keys(src).forEach(k => { img[k] = new Image(); img[k].src = src[k]; });
     const types = [{ e: "🍗", p: 1, w: 48, s: 1 }, { e: "🍟", p: 2, w: 22, s: 1.15 }, { e: "🌶️", p: -3, w: 14, s: 1.2 }, { e: "🥦", p: -2, w: 12, s: 1.1 }, { e: "67", p: 7, w: 4, s: 1.5, gold: true }];
-    let who = "nu", running = false, score = 0, time = 30, px = W / 2, items = [], pops = [], last = 0, spawn = 0, raf = 0, dir = 0;
+    let who = "nu", running = false, round67Mode = false, score = 0, time = 30, px = W / 2, items = [], pops = [], last = 0, spawn = 0, raf = 0, dir = 0;
     let best = store.get("best-catch", 0); $("#c-best").textContent = best;
     $$("[data-who]", ov).forEach(b => b.addEventListener("click", () => { who = b.dataset.who; $$("[data-who]", ov).forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
     const pickType = () => { let r = Math.random() * 100; for (const t of types) { if ((r -= t.w) < 0) return t; } return types[0]; };
@@ -1152,7 +1321,11 @@ document.addEventListener("keydown", event => {
       if (!running) return;
       const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
       time -= dt; spawn -= dt; px = Math.max(40, Math.min(W - 40, px + dir * 520 * dt));
-      if (spawn <= 0) { const ty = pickType(); items.push({ t: ty, x: 30 + Math.random() * (W - 60), y: -30, v: (150 + (30 - time) * 6) * ty.s, r: 0, vr: (Math.random() - .5) * 3 }); spawn = Math.max(.2, .62 - (30 - time) * .012); }
+      if (spawn <= 0) {
+        const ty = pickType(), config = settings[difficulty.value], modeSpeed = round67Mode ? 1.35 : 1, modeSpawn = round67Mode ? .7 : 1;
+        items.push({ t: ty, x: 30 + Math.random() * (W - 60), y: -30, v: (150 + (30 - time) * 6) * ty.s * config.speed * modeSpeed, r: 0, vr: (Math.random() - .5) * 3 });
+        spawn = Math.max(.12, config.spawn * modeSpawn - (30 - time) * config.acceleration);
+      }
       items.forEach(i => { i.y += i.v * dt; i.r += i.vr * dt; });
       items = items.filter(i => {
         if (i.y > H - 140 && i.y < H - 40 && Math.abs(i.x - px) < 48) {
@@ -1167,18 +1340,19 @@ document.addEventListener("keydown", event => {
       if (time <= 0) return end(); raf = requestAnimationFrame(frame);
     }
     function start() {
-      score = 0; time = 30; items = []; pops = []; spawn = 0; dir = 0; px = W / 2; running = true;
+      score = 0; time = 30; items = []; pops = []; spawn = 0; dir = 0; px = W / 2; round67Mode = is67Mode(); running = true; difficulty.disabled = true;
       $("#c-score").textContent = 0; ov.hidden = true; last = performance.now(); raf = requestAnimationFrame(frame);
     }
     function end() {
       running = false; cancelAnimationFrame(raf); draw();
+      difficulty.disabled = false;
       const isBest = score > best; if (isBest) { best = score; store.set("best-catch", best); $("#c-best").textContent = best; }
       ov.hidden = false; $("h3", ov).textContent = isBest && score > 0 ? `สถิติใหม่! ${score} คะแนน 🎉` : `ได้ ${score} คะแนน`;
       $("#c-start").textContent = "เล่นอีกรอบ ↻"; if (score >= 25) burst(26);
       addAura(score, "รับไก่");
     }
     $("#c-start").addEventListener("click", start);
-    stoppers.push(() => { if (running) { running = false; cancelAnimationFrame(raf); ov.hidden = false; $("h3", ov).textContent = "รับไก่ 30 วินาที"; $("#c-start").textContent = "เริ่มเกม ▶"; } });
+    stoppers.push(() => { if (running) { running = false; cancelAnimationFrame(raf); difficulty.disabled = false; ov.hidden = false; $("h3", ov).textContent = "รับไก่ 30 วินาที"; $("#c-start").textContent = "เริ่มเกม ▶"; } });
     draw();
   })();
 
@@ -1186,23 +1360,50 @@ document.addEventListener("keydown", event => {
   (() => {
     const keys = ["pyell2", "pnu1", "psky1", "psky2", "pyell1", "pnu2"], names = ["เยล", "นุ", "สกาย", "สกาย(ค่ำ)", "เยล(โต๊ะ)", "นุ(เคาน์เตอร์)"];
     const grid = $("#mem"); let open = [], lock = false, moves = 0, done = 0, t0 = 0, timer = 0, best = store.get("best-mem", 0);
+    const difficulty = setupDifficulty("m-difficulty", "difficulty-memory");
+    const pairCounts = { easy: 3, medium: 4, hard: 6, extreme: 12, 67: 18 };
+    let pairsToMatch = pairCounts[difficulty.value], timeLimit = 0, round67Mode = false;
     if (best) $("#m-best").textContent = best + " ครั้ง";
     function build() {
       clearInterval(timer); open = []; lock = false; moves = 0; done = 0; t0 = 0;
-      $("#m-moves").textContent = 0; $("#m-time").textContent = 0; $("#m-msg").textContent = "จับคู่รูปให้ครบ 6 คู่ ยิ่งเปิดน้อย ยิ่งได้ AURA เยอะ";
-      grid.innerHTML = shuffle([...keys, ...keys]).map((k, i) => `<button type="button" class="mc" data-k="${k}" aria-label="การ์ดใบที่ ${i + 1}"><span class="mc__in"><span class="mc__f">67</span><span class="mc__b"><img src="imgs/${k}.png" alt="${names[keys.indexOf(k)]}"></span></span></button>`).join("");
+      round67Mode = is67Mode();
+      const modeOn = round67Mode;
+      pairsToMatch = Math.min(18, pairCounts[difficulty.value] + (modeOn && difficulty.value !== "67" ? 3 : 0));
+      timeLimit = difficulty.value === "67" ? (modeOn ? 33 : 67) : modeOn ? 67 : 0;
+      const pairs = Array.from({ length: pairsToMatch }, (_, index) => {
+        const key = keys[index % keys.length], variant = Math.floor(index / keys.length) + 1;
+        return { id: `${key}-${variant}`, key, variant };
+      });
+      const deck = shuffle(pairs.flatMap(pair => [pair, pair]));
+      $("#m-moves").textContent = 0; $("#m-time").textContent = 0; $("#m-time-label").textContent = timeLimit ? "เหลือเวลา" : "เวลา";
+      $("#m-msg").textContent = `จับคู่รูปให้ครบ ${pairsToMatch} คู่${timeLimit ? ` · จำกัดเวลา ${timeLimit} วินาที` : " · ยิ่งเปิดน้อย ยิ่งได้ AURA เยอะ"}`;
+      grid.innerHTML = deck.map((pair, i) => `<button type="button" class="mc" data-k="${pair.id}" aria-label="การ์ดใบที่ ${i + 1}"><span class="mc__in"><span class="mc__f">67</span><span class="mc__b"><img src="imgs/${pair.key}.png" alt="${names[keys.indexOf(pair.key)]}"><span class="mc__variant">${pair.variant}</span></span></span></button>`).join("");
     }
     grid.addEventListener("click", e => {
       const c = e.target.closest(".mc"); if (!c || lock || c.classList.contains("is-open") || c.classList.contains("is-done")) return;
-      if (!t0) { t0 = Date.now(); timer = setInterval(() => $("#m-time").textContent = Math.floor((Date.now() - t0) / 1000), 500); }
+      if (!t0) {
+        t0 = Date.now();
+        timer = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - t0) / 1000);
+          if (timeLimit && elapsed >= timeLimit) {
+            clearInterval(timer); lock = true; $("#m-time").textContent = "0";
+            $("#m-msg").textContent = `หมดเวลา! ยังจับคู่ไม่ครบ ${done}/${pairsToMatch} คู่ · สับไพ่ใหม่เพื่อลองอีกครั้ง`;
+            return;
+          }
+          $("#m-time").textContent = String(timeLimit ? timeLimit - elapsed : elapsed);
+        }, 250);
+      }
       c.classList.add("is-open"); open.push(c);
       if (open.length < 2) return;
       moves++; $("#m-moves").textContent = moves; lock = true;
       const [a, b] = open;
       if (a.dataset.k === b.dataset.k) {
         a.classList.add("is-done"); b.classList.add("is-done"); open = []; lock = false; done++;
-        if (done === 6) win();
-      } else setTimeout(() => { a.classList.remove("is-open"); b.classList.remove("is-open"); open = []; lock = false; }, 800);
+        if (done === pairsToMatch) win();
+      } else setTimeout(() => {
+        a.classList.remove("is-open"); b.classList.remove("is-open"); open = [];
+        lock = timeLimit > 0 && t0 && Math.floor((Date.now() - t0) / 1000) >= timeLimit;
+      }, difficulty.value === "easy" ? 1000 : difficulty.value === "67" ? (round67Mode ? 120 : 180) : difficulty.value === "extreme" ? (round67Mode ? 250 : 400) : difficulty.value === "hard" ? 500 : 800);
     });
     function win() {
       clearInterval(timer); const sec = Math.floor((Date.now() - t0) / 1000), gain = Math.max(10, 70 - moves * 3 - Math.floor(sec / 4));
@@ -1211,6 +1412,10 @@ document.addEventListener("keydown", event => {
       burst(30); addAura(gain, "จับคู่ 3 รัก");
     }
     $("#m-reset").addEventListener("click", build);
+    difficulty.addEventListener("change", build);
+    document.addEventListener("arcade:67-mode-change", () => {
+      if (!t0 || done === pairsToMatch) build();
+    });
     stoppers.push(() => clearInterval(timer));
     build();
   })();
@@ -1218,28 +1423,37 @@ document.addEventListener("keydown", event => {
   /* ---------- เกม 3: ทอดให้พอดี ---------- */
   (() => {
     const bar = $("#f-bar"), cur = $("#f-cur"), zone = $("#f-zone"), go = $("#f-go"), msg = $("#f-msg"), chick = $("#f-chick");
-    const zones = [26, 21, 17, 13, 10];
-    let round = 0, total = 0, pos = 0, d = 1, raf = 0, running = false, last = 0, best = store.get("best-fry", 0);
+    const difficulty = setupDifficulty("f-difficulty", "difficulty-fry");
+    const settings = {
+      easy: { zones: [34, 29, 24, 20, 16], speed: .75 },
+      medium: { zones: [26, 21, 17, 13, 10], speed: 1 },
+      hard: { zones: [19, 15, 11, 8, 6], speed: 1.3 },
+      extreme: { zones: [12, 9, 7, 5, 3], speed: 1.7 },
+      67: { zones: [5, 4, 3, 2, 1], speed: 2.3 }
+    };
+    let round = 0, total = 0, pos = 0, d = 1, raf = 0, running = false, round67Mode = false, last = 0, best = store.get("best-fry", 0);
     $("#f-best").textContent = best;
     function loop(t) {
       if (!running) return;
       const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
-      pos += d * (75 + round * 30) * dt;
+      pos += d * (75 + round * 30) * settings[difficulty.value].speed * (round67Mode ? 1.35 : 1) * dt;
       if (pos >= 100) { pos = 100; d = -1; } if (pos <= 0) { pos = 0; d = 1; }
       cur.style.left = pos + "%"; raf = requestAnimationFrame(loop);
     }
     function begin() {
       if (round === 0 || round >= 5) { round = 0; total = 0; $("#f-score").textContent = 0; }
-      zone.style.width = zones[round] + "%"; $("#f-round").textContent = round + 1;
+      round67Mode = is67Mode();
+      zone.style.width = settings[difficulty.value].zones[round] * (round67Mode ? .7 : 1) + "%"; $("#f-round").textContent = round + 1;
       chick.className = "fry__chick"; chick.textContent = "🍗"; msg.textContent = "รอจังหวะ... แล้วกดยกไก่!";
-      pos = Math.random() * 100; d = Math.random() < .5 ? 1 : -1; running = true; last = performance.now();
+      pos = Math.random() * 100; d = Math.random() < .5 ? 1 : -1; running = true; difficulty.disabled = true; last = performance.now();
       go.textContent = "ยกไก่! 🍗"; go.dataset.mode = "stop"; raf = requestAnimationFrame(loop);
     }
     function stop() {
       running = false; cancelAnimationFrame(raf);
-      const dist = Math.abs(pos - 50), half = zones[round] / 2, pts = Math.max(0, Math.round(20 - dist * .8));
+      const dist = Math.abs(pos - 50), half = settings[difficulty.value].zones[round] * (round67Mode ? .7 : 1) / 2, pts = Math.max(0, Math.round(20 - dist * .8));
+      difficulty.disabled = false;
       let text, cls;
-      if (dist <= 2) { text = "กรอบสมบูรณ์แบบ! 🔥"; cls = "is-perfect"; } else if (dist <= half) { text = "กรอบพอดี 😋"; cls = "is-good"; }
+      if (dist <= Math.min(2, half)) { text = "กรอบสมบูรณ์แบบ! 🔥"; cls = "is-perfect"; } else if (dist <= half) { text = "กรอบพอดี 😋"; cls = "is-good"; }
       else if (pos < 50) { text = "ยังดิบอยู่ 🥶"; cls = "is-raw"; } else { text = "ไหม้แล้ว!! 💀"; cls = "is-burnt"; }
       chick.className = "fry__chick " + cls; chick.textContent = cls === "is-burnt" ? "🔥" : cls === "is-raw" ? "🥶" : "🍗";
       total += pts; round++; $("#f-score").textContent = total; msg.textContent = `${text} +${pts}`;
@@ -1251,16 +1465,49 @@ document.addEventListener("keydown", event => {
     }
     go.addEventListener("click", () => go.dataset.mode === "stop" ? stop() : begin());
     addEventListener("keydown", e => { if (e.code === "Space" && running && !$("[data-panel=fry]").hidden) { e.preventDefault(); stop(); } });
-    stoppers.push(() => { running = false; cancelAnimationFrame(raf); if (go.dataset.mode === "stop") { go.textContent = "เริ่มทอด ▶"; go.dataset.mode = "start"; round = 0; } });
+    stoppers.push(() => { running = false; cancelAnimationFrame(raf); difficulty.disabled = false; if (go.dataset.mode === "stop") { go.textContent = "เริ่มทอด ▶"; go.dataset.mode = "start"; round = 0; } });
   })();
 
   /* ---------- เกม 4: จับไก่ไว ---------- */
   (() => {
     const grid = $("#whack-grid"), cells = $$(".whack-cell", grid);
     const startButton = $("#w-start"), status = $("#w-status");
+    const difficulty = setupDifficulty("w-difficulty", "difficulty-whack");
+    let round67Mode = is67Mode();
+    const settings = {
+      easy: { duration: 45, target: 1300, spawn: 1050, spawnMin: 650, pepper: .1 },
+      medium: { duration: 30, target: 900, spawn: 760, spawnMin: 360, pepper: .2 },
+      hard: { duration: 20, target: 600, spawn: 520, spawnMin: 250, pepper: .3 },
+      extreme: { duration: 15, target: 420, spawn: 300, spawnMin: 150, pepper: .4 },
+      67: { duration: 15, target: 260, spawn: 210, spawnMin: 90, pepper: .48 }
+    };
+    function currentSettings() {
+      const config = settings[difficulty.value], mode = round67Mode;
+      return mode ? {
+        ...config,
+        duration: Math.max(8, Math.floor(config.duration * .75)),
+        target: Math.max(120, Math.floor(config.target * .65)),
+        spawn: Math.max(130, Math.floor(config.spawn * .65)),
+        spawnMin: Math.max(70, Math.floor(config.spawnMin * .65)),
+        pepper: Math.min(.7, config.pepper + .12)
+      } : config;
+    }
     let score = 0, combo = 0, misses = 0, best = store.get("best-whack", 0);
     let running = false, activeIndex = -1, activeKind = "";
     let clockTimer = 0, spawnTimer = 0, targetTimer = 0, endsAt = 0;
+    $("#w-time").textContent = String(currentSettings().duration);
+    status.textContent = `พร้อมแล้ว กดเริ่มเกมเพื่อเล่น ${currentSettings().duration} วินาที`;
+    difficulty.addEventListener("change", () => {
+      if (running) return;
+      $("#w-time").textContent = String(currentSettings().duration);
+      status.textContent = `พร้อมแล้ว กดเริ่มเกมเพื่อเล่น ${currentSettings().duration} วินาที`;
+    });
+    document.addEventListener("arcade:67-mode-change", () => {
+      if (running) return;
+      round67Mode = is67Mode();
+      $("#w-time").textContent = String(currentSettings().duration);
+      status.textContent = `พร้อมแล้ว กดเริ่มเกมเพื่อเล่น ${currentSettings().duration} วินาที`;
+    });
     $("#w-best").textContent = best;
 
     function clearTarget() {
@@ -1279,7 +1526,8 @@ document.addEventListener("keydown", event => {
 
     function scheduleTarget() {
       if (!running) return;
-      const delay = Math.max(360, 760 - Math.floor(score / 60) * 35);
+      const config = currentSettings();
+      const delay = Math.max(config.spawnMin, config.spawn - Math.floor(score / 60) * 35);
       spawnTimer = setTimeout(showTarget, delay);
     }
 
@@ -1288,7 +1536,8 @@ document.addEventListener("keydown", event => {
       clearTarget();
       activeIndex = Math.floor(Math.random() * cells.length);
       const roll = Math.random();
-      activeKind = roll < .12 ? "golden" : roll < .32 ? "pepper" : "chicken";
+      const config = currentSettings();
+      activeKind = roll < .12 ? "golden" : roll < .12 + config.pepper ? "pepper" : "chicken";
       const cell = cells[activeIndex];
       cell.classList.add(`is-${activeKind}`);
       cell.textContent = activeKind === "golden" ? "67" : activeKind === "pepper" ? "🌶️" : "🍗";
@@ -1304,12 +1553,13 @@ document.addEventListener("keydown", event => {
           status.textContent = `ไก่หนีไปแล้ว! พลาด ${misses} ตัว`;
         }
         scheduleTarget();
-      }, 900);
+      }, config.target);
     }
 
     function endRound() {
       if (!running) return;
       running = false;
+      difficulty.disabled = false;
       clearInterval(clockTimer);
       clearTimeout(spawnTimer);
       clearTarget();
@@ -1334,13 +1584,16 @@ document.addEventListener("keydown", event => {
       combo = 0;
       misses = 0;
       running = true;
-      endsAt = Date.now() + 30000;
+      round67Mode = is67Mode();
+      const duration = currentSettings().duration;
+      endsAt = Date.now() + duration * 1000;
       $("#w-score").textContent = "0";
       $("#w-combo").textContent = "0";
-      $("#w-time").textContent = "30";
-      status.textContent = "เริ่มแล้ว! แตะไก่และ 67 ให้ทัน";
+      $("#w-time").textContent = String(duration);
+      status.textContent = `เริ่มแล้ว! แตะไก่และ 67 ให้ทัน · ${duration} วินาที`;
       startButton.disabled = true;
       startButton.textContent = "กำลังเล่น...";
+      difficulty.disabled = true;
       showTarget();
       clockTimer = setInterval(() => {
         const remaining = Math.max(0, endsAt - Date.now());
@@ -1373,6 +1626,7 @@ document.addEventListener("keydown", event => {
     stoppers.push(() => {
       if (!running) return;
       running = false;
+      difficulty.disabled = false;
       clearInterval(clockTimer);
       clearTimeout(spawnTimer);
       clearTarget();
@@ -1381,7 +1635,7 @@ document.addEventListener("keydown", event => {
       misses = 0;
       $("#w-score").textContent = "0";
       $("#w-combo").textContent = "0";
-      $("#w-time").textContent = "30";
+      $("#w-time").textContent = String(currentSettings().duration);
       startButton.disabled = false;
       startButton.textContent = "เริ่มใหม่ ▶";
       status.textContent = "หยุดเกมเมื่อเปลี่ยนแท็บ · กดเริ่มใหม่เพื่อเล่นอีกครั้ง";

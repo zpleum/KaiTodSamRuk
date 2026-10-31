@@ -85,7 +85,7 @@
 
     <section class="stats" aria-label="ตัวเลขสุดป่วน">
       <div><b>67<small>ล้าน</small></b><span>aura ที่ปล่อยต่อวัน</span></div>
-      <div><b>09-23<small>น.</small></b><span>เปิดทุกวัน ไม่มีวันหยุดใจ</span></div>
+      <div><b>08-23<small>น.</small></b><span>เปิดทุกวัน ไม่มีวันหยุดใจ</span></div>
       <div><b>3<small>รัก</small></b><span>รักกรอบ รักเผ็ด รักหิว</span></div>
       <div><b>100<small>%</small></b><span>ความกรอบ (ยืนยันโดย Elon Musk)</span></div>
     </section>
@@ -235,6 +235,16 @@
 
       <div class="menu-status" aria-live="polite"><span id="menu-count">กำลังเตรียมเมนู...</span><span
           id="menu-total"></span></div>
+      <section class="menu-comparison" id="menu-comparison" aria-labelledby="menu-comparison-title" hidden>
+        <div class="menu-comparison__heading">
+          <div>
+            <h3 id="menu-comparison-title">เทียบให้ชัด ก่อนเลือก</h3>
+            <p id="menu-comparison-hint">ราคา จำนวน และราคาเฉลี่ยต่อชิ้น</p>
+          </div>
+          <button type="button" class="menu-comparison__clear" id="compare-clear">ล้างรายการเทียบ</button>
+        </div>
+        <div class="menu-comparison__results" id="comparison-results" aria-live="polite"></div>
+      </section>
       <div class="bingo-card" id="bingo-card" hidden aria-live="polite"></div>
 
       <div class="menu-grid">
@@ -256,8 +266,8 @@
         </table>
       </div>
 
-      <details class="menu-manager">
-        <summary>🛠️ จัดการเมนู <span>เพิ่มเมนู / ลบเมนูออกจากหน้าจอ</span></summary>
+      <details class="menu-manager" id="menu-manager">
+        <summary>🛠️ จัดการเมนู <span id="menu-manager-description">เพิ่ม แก้ไข หรือลบเมนู</span></summary>
         <form id="menu-add-form" class="menu-add-form">
           <label>ชื่อเมนู<input name="productName" type="text" maxlength="100" required
               placeholder="เช่น ไก่กรอบพลังออร่า"></label>
@@ -266,9 +276,12 @@
               placeholder="67"></label>
           <label class="menu-image-field">ลิงก์รูปภาพ (ไม่ใส่ก็ได้)<input name="imageURL" type="url"
               placeholder="https://..."></label>
-          <button type="submit">＋ เพิ่มเมนู</button>
+          <div class="menu-form-actions">
+            <button type="submit">＋ เพิ่มเมนู</button>
+            <button type="button" id="menu-edit-cancel" hidden>ยกเลิกแก้ไข</button>
+          </div>
         </form>
-        <p class="menu-manager__note">ปุ่มนี้เพิ่ม/ลบข้อมูลในฐานข้อมูลจริง การลบมีผลกับทุกคนและย้อนกลับไม่ได้</p>
+        <p class="menu-manager__note">การเพิ่มและแก้ไขบันทึกลงฐานข้อมูลจริง ส่วนการลบมีผลกับทุกคนและย้อนกลับไม่ได้</p>
       </details>
     </section>
 
@@ -291,8 +304,11 @@
           <button id="menu-bingo" type="button">🎯 สุ่มบิงโกเมนู</button>
         </div>
       </div>
-      <figure class="console-photo"><img src="imgs/nobg/pyell1.png" alt="ทีมงานกับเมนูไก่" loading="lazy">
-        <figcaption>CREW ON DUTY</figcaption>
+      <figure class="console-photo">
+        <img src="imgs/nobg/pyell1.png" alt="ทีมงานกับเมนูไก่" loading="lazy" class="console-photo__cutout">
+        <img src="imgs/nobg/pyell2.png" alt="ทีมงานกับเมนูไก่" loading="lazy">
+        <img src="imgs/nobg/pyell1.png" alt="ทีมงานกับเมนูไก่" loading="lazy">
+        <img src="imgs/nobg/pyell2.png" alt="ทีมงานกับเมนูไก่" loading="lazy">
       </figure>
       <div class="console-ticker"><span>คำเตือน: เปิดดูเมนูตอนดึกอาจทำให้หิวเพิ่ม 300%</span></div>
     </section>
@@ -400,7 +416,7 @@
         <h2 id="night-t">GOOD FOOD.<span>GOOD NIGHTS.</span></h2>
         <p class="night__lead">ไก่ร้อนๆ แสงไฟตลาด และเพื่อนที่ไม่ยอมกลับบ้าน ค่ำคืนนี้ขอแค่ถังเดียวก็พอ</p>
         <ul class="night__facts">
-          <li><b>09:00–23:00</b><span>เปิดถึงดึก</span></li>
+          <li><b>08:00–23:00</b><span>เปิดถึงดึก</span></li>
           <li><b>2+</b><span>คนแชร์ถังเดียว</span></li>
           <li><b>∞</b><span>เรื่องเมาท์</span></li>
         </ul>
@@ -474,7 +490,7 @@
       <h2 id="fq-t">ถามบ่อย<br><span>(และถามมั่ว)</span></h2>
       <details open>
         <summary>ร้านเปิดกี่โมง?</summary>
-        <p>ทุกวัน 09:00–23:00 หิวนอกเวลาให้ไถเมนูไปก่อน</p>
+        <p>ทุกวัน 08:00–23:00 หิวนอกเวลาให้ไถเมนูไปก่อน</p>
       </details>
       <details>
         <summary>ตะกร้าในเว็บสั่งได้จริงไหม?</summary>
@@ -506,7 +522,7 @@
     </div>
     <div>
       <h4>เวลาเปิด</h4>
-      <p>ทุกวัน 09:00–23:00</p>
+      <p>ทุกวัน 08:00–23:00</p>
       <p>สั่งเล่นได้ 24 ชม.</p>
     </div>
     <div class="ft-photos">

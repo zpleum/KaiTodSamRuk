@@ -721,6 +721,145 @@ select {
   font-size: 14px
 }
 
+.menu-comparison {
+  margin: 0 0 24px;
+  padding: clamp(16px, 3vw, 26px);
+  border: var(--bd);
+  border-radius: var(--r);
+  background: #fff;
+  box-shadow: var(--sh)
+}
+
+.menu-comparison[hidden] {
+  display: none
+}
+
+.menu-comparison__heading,
+.comparison-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px
+}
+
+.menu-comparison__heading {
+  margin-bottom: 18px
+}
+
+.menu-comparison__heading h3 {
+  margin: 0;
+  font: 700 clamp(21px, 3vw, 30px)/1.2 var(--disp)
+}
+
+.menu-comparison__heading p {
+  margin: 5px 0 0;
+  color: #555;
+  font-size: 14px
+}
+
+.menu-comparison__clear,
+.comparison-card__remove {
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--cream);
+  font: 600 13px var(--body)
+}
+
+.menu-comparison__clear:hover,
+.comparison-card__remove:hover {
+  background: var(--org);
+  color: #fff
+}
+
+.menu-comparison__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px
+}
+
+.comparison-card {
+  min-width: 0;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--cream)
+}
+
+.comparison-card__heading {
+  justify-content: flex-start;
+  min-height: 48px;
+  margin-bottom: 10px
+}
+
+.comparison-card__heading img {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  object-fit: cover
+}
+
+.comparison-card__heading h4 {
+  flex: 1;
+  margin: 0;
+  font: 700 18px/1.3 var(--disp);
+  overflow-wrap: anywhere
+}
+
+.comparison-card__remove {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  font-size: 12px
+}
+
+.comparison-card__details {
+  margin: 0
+}
+
+.comparison-card__details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(24, 21, 21, .18)
+}
+
+.comparison-card__details dt {
+  color: #555
+}
+
+.comparison-card__details dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums
+}
+
+.comparison-card--empty {
+  display: grid;
+  place-items: center;
+  min-height: 130px;
+  border-style: dashed;
+  color: #555;
+  text-align: center
+}
+
+.menu-comparison__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+  font-weight: 700
+}
+
+.menu-comparison__verdict span {
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--lime)
+}
+
 /* cards from table (JS fills td order: name, qty, price, image) */
 .menu-table {
   display: block;
@@ -913,7 +1052,13 @@ select {
   padding: 0 20px 14px
 }
 
-.menu-add-form button {
+.menu-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px
+}
+
+.menu-form-actions button {
   min-height: 44px;
   padding: 0 18px;
   border: var(--bd);
@@ -921,6 +1066,29 @@ select {
   background: var(--ink);
   color: var(--lime);
   font: 700 15px var(--disp)
+}
+
+.menu-form-actions button:hover:not(:disabled) {
+  background: var(--org);
+  color: #fff
+}
+
+.menu-form-actions button:disabled {
+  cursor: wait;
+  opacity: .7
+}
+
+.menu-form-actions #menu-edit-cancel {
+  background: var(--cream);
+  color: var(--ink)
+}
+
+.menu-form-actions #menu-edit-cancel[hidden] {
+  display: none
+}
+
+.edit-action {
+  background: var(--pink)
 }
 
 .menu-manager__note {
@@ -1107,6 +1275,7 @@ select {
 .console-photo img {
   width: min(100%, 320px);
   height: 170px;
+  border-radius: 16px;
   object-fit: contain
 }
 
@@ -1697,7 +1866,7 @@ body[data-mood=feast] .menu-table td:nth-child(3) {
 
   .menu-add-form label:first-child,
   .menu-image-field,
-  .menu-add-form button {
+  .menu-form-actions {
     grid-column: 1/-1
   }
 }
@@ -2791,6 +2960,24 @@ body {
 }
 
 @media(max-width:520px) {
+  .menu-comparison__heading {
+    align-items: flex-start
+  }
+
+  .menu-comparison__heading p {
+    font-size: 12px
+  }
+
+  .menu-comparison__clear {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    font-size: 11px
+  }
+
+  .menu-comparison__cards {
+    grid-template-columns: 1fr
+  }
+
   .menu-table tbody tr:not(.menu-loading) td:nth-child(1) {
     padding: 12px 10px 2px;
     font-size: 15px

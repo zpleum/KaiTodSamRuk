@@ -10,6 +10,7 @@ let loadSequence = 0;
 let favorites = readStore("crispy-favorites", []);
 let cart = readStore("crispy-cart", {});
 let compareIds = [];
+let editingMenuId = null;
 let showFavorites = false;
 let soundEnabled = false;
 let challengeIndex = 0;
@@ -238,6 +239,118 @@ function updateCounters() {
   document.getElementById("favorite-count").textContent = favorites.length;
   document.getElementById("compare-count").textContent = `${compareIds.length}/2`;
   renderCart();
+  renderComparison();
+}
+
+function formatPrice(value) {
+  return `฿${Number(value).toLocaleString("th-TH", { maximumFractionDigits: 2 })}`;
+}
+
+function renderComparison() {
+  const panel = document.getElementById("menu-comparison");
+  const results = document.getElementById("comparison-results");
+  const hint = document.getElementById("menu-comparison-hint");
+  const chosen = compareIds
+    .map(id => menus.find((menu, index) => safeId(menu, index) === id))
+    .filter(Boolean);
+
+  panel.hidden = chosen.length === 0;
+  results.replaceChildren();
+  if (!chosen.length) return;
+
+  hint.textContent = chosen.length === 1
+    ? "เลือกอีก 1 เมนู เพื่อดูส่วนต่างราคาและความคุ้มค่าต่อชิ้น"
+    : "เปรียบเทียบราคา จำนวน และราคาเฉลี่ยต่อชิ้น";
+
+  const cards = document.createElement("div");
+  cards.className = "menu-comparison__cards";
+  chosen.forEach((item, index) => {
+    const card = document.createElement("article");
+    card.className = "comparison-card";
+    const heading = document.createElement("div");
+    heading.className = "comparison-card__heading";
+    if (item.imageURL) {
+      const image = document.createElement("img");
+      image.src = item.imageURL;
+      image.alt = "";
+      image.loading = "lazy";
+      image.onerror = () => image.remove();
+      heading.append(image);
+    }
+
+    const title = document.createElement("h4");
+    title.textContent = item.productName || "เมนูอร่อย";
+    heading.append(title);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "comparison-card__remove";
+    removeButton.textContent = "เอาออก";
+    removeButton.setAttribute("aria-label", `เอา ${item.productName || "เมนูนี้"} ออกจากรายการเทียบ`);
+    removeButton.addEventListener("click", () => {
+      compareIds = compareIds.filter(id => id !== safeId(item, menus.indexOf(item)));
+      updateCounters();
+      renderMenus();
+    });
+    heading.append(removeButton);
+    card.append(heading);
+
+    const details = document.createElement("dl");
+    details.className = "comparison-card__details";
+    const amount = Number(item.amount ?? 1);
+    const price = Number(item.price);
+    const metrics = [
+      ["ราคา", formatPrice(price)],
+      ["จำนวน", `${item.amount ?? 1} ชิ้น`],
+      ...(Number.isFinite(amount) && amount > 0 && Number.isFinite(price)
+        ? [["เฉลี่ยต่อชิ้น", formatPrice(price / amount)]]
+        : [])
+    ];
+    metrics.forEach(([label, value]) => {
+      const row = document.createElement("div");
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = value;
+      row.append(term, description);
+      details.append(row);
+    });
+    card.append(details);
+    cards.append(card);
+  });
+
+  if (chosen.length === 1) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "comparison-card comparison-card--empty";
+    placeholder.textContent = "เลือกอีก 1 เมนูจากรายการด้านล่าง";
+    cards.append(placeholder);
+  } else {
+    const [first, second] = chosen;
+    const firstAmount = Number(first.amount ?? 1);
+    const secondAmount = Number(second.amount ?? 1);
+    const firstPrice = Number(first.price);
+    const secondPrice = Number(second.price);
+    if ([firstAmount, secondAmount, firstPrice, secondPrice].every(Number.isFinite)
+      && firstAmount > 0 && secondAmount > 0) {
+      const firstUnitPrice = firstPrice / firstAmount;
+      const secondUnitPrice = secondPrice / secondAmount;
+      const verdict = document.createElement("p");
+      verdict.className = "menu-comparison__verdict";
+      const difference = Math.abs(firstPrice - secondPrice);
+      const priceDifference = document.createElement("span");
+      priceDifference.textContent = firstPrice === secondPrice
+        ? "ราคารวมเท่ากัน"
+        : `${firstPrice < secondPrice ? first.productName : second.productName} ถูกกว่า ${formatPrice(difference)} ต่อเมนู`;
+      const unitDifference = document.createElement("span");
+      unitDifference.textContent = firstUnitPrice === secondUnitPrice
+        ? "ราคาเฉลี่ยต่อชิ้นเท่ากัน"
+        : `${firstUnitPrice < secondUnitPrice ? first.productName : second.productName} คุ้มกว่าต่อชิ้น`;
+      verdict.append(priceDifference, unitDifference);
+      results.append(cards, verdict);
+      return;
+    }
+  }
+  results.append(cards);
 }
 
 function renderMenus() {
@@ -295,17 +408,37 @@ function renderMenus() {
     const compareButton = document.createElement("button");
     compareButton.type = "button";
     compareButton.className = "row-action compare-action";
-    compareButton.textContent = compareIds.includes(itemId) ? "✓ เลือกแล้ว" : "⚖ เทียบ";
+    const isCompared = compareIds.includes(itemId);
+    compareButton.textContent = isCompared ? "✓ เทียบอยู่" : "⚖ เทียบ";
+    compareButton.setAttribute("aria-pressed", String(isCompared));
+    compareButton.setAttribute("aria-label", `${isCompared ? "เอาออกจากรายการเทียบ" : "เพิ่มเข้าไปเทียบ"} ${item.productName || "เมนูนี้"}`);
     compareButton.addEventListener("click", () => {
       if (compareIds.includes(itemId)) compareIds = compareIds.filter(id => id !== itemId);
       else if (compareIds.length < 2) compareIds.push(itemId);
       else { notify("เลือกเทียบได้ครั้งละ 2 เมนูนะ"); return; }
       updateCounters();
       renderMenus();
-      if (compareIds.length === 2) {
-        const chosen = compareIds.map(id => menus.find((menu, index) => safeId(menu, index) === id));
-        notify(`${chosen[0].productName} ฿${chosen[0].price} เทียบกับ ${chosen[1].productName} ฿${chosen[1].price}`);
-      }
+      if (compareIds.length) document.getElementById("menu-comparison").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "row-action edit-action";
+    editButton.textContent = "แก้ไข";
+    editButton.setAttribute("aria-label", `แก้ไขเมนู ${item.productName || "นี้"}`);
+    editButton.addEventListener("click", () => {
+      const manager = document.getElementById("menu-manager");
+      const form = document.getElementById("menu-add-form");
+      editingMenuId = itemId;
+      form.elements.productName.value = item.productName || "";
+      form.elements.amount.value = item.amount ?? 1;
+      form.elements.price.value = item.price ?? 0;
+      form.elements.imageURL.value = item.imageURL || "";
+      form.querySelector("[type='submit']").textContent = "บันทึกการแก้ไข";
+      document.getElementById("menu-edit-cancel").hidden = false;
+      document.getElementById("menu-manager-description").textContent = `กำลังแก้ไข “${item.productName || "เมนู"}”`;
+      manager.open = true;
+      manager.scrollIntoView({ behavior: "smooth", block: "center" });
+      form.elements.productName.focus({ preventScroll: true });
     });
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -313,7 +446,7 @@ function renderMenus() {
     deleteButton.textContent = "ลบ ×";
     deleteButton.setAttribute("aria-label", `ลบเมนู ${item.productName} จากฐานข้อมูล`);
     deleteButton.addEventListener("click", () => deleteMenuFromDatabase(item));
-    name.append(title, favoriteButton, cartButton, compareButton, deleteButton);
+    name.append(title, favoriteButton, cartButton, compareButton, editButton, deleteButton);
     const amount = document.createElement("td");
     amount.textContent = `${item.amount ?? 1} ชิ้น`;
     const price = document.createElement("td");
@@ -365,6 +498,7 @@ async function loadMenus() {
     if (!Array.isArray(data)) throw new Error("ข้อมูลเมนูไม่ถูกต้อง");
     if (sequence !== loadSequence) return;
     menus = data;
+    compareIds = compareIds.filter(id => menus.some((item, index) => safeId(item, index) === id));
     renderMenus();
     updateCounters();
     const params = new URLSearchParams(location.search);
@@ -429,7 +563,17 @@ document.getElementById("party-plan").addEventListener("click", () => {
   notify(`🍗 ปาร์ตี้ ${people} คน: ${pick.map(item => item.productName).join(" + ")} · รวม ฿${total} (เฉลี่ย ฿${Math.ceil(total / people)}/คน)`);
 });
 document.getElementById("compare-mode").addEventListener("click", () => {
-  notify(compareIds.length ? `เลือกแล้ว ${compareIds.length} เมนู · กด ⚖ เทียบ ที่แถวเมนูเพื่อเลือกได้ครบ 2` : "กด ⚖ เทียบ บนเมนู 2 รายการเพื่อเทียบกัน");
+  if (compareIds.length) {
+    document.getElementById("menu-comparison").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  notify("กด ⚖ เทียบ บนเมนู 2 รายการ เพื่อดูราคาและความคุ้มค่าต่อชิ้น");
+  document.getElementById("menu-list").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+document.getElementById("compare-clear").addEventListener("click", () => {
+  compareIds = [];
+  updateCounters();
+  renderMenus();
 });
 document.getElementById("sound-toggle").addEventListener("click", event => {
   soundEnabled = !soundEnabled;
@@ -887,6 +1031,17 @@ function refreshDailyReport() {
 }
 document.getElementById("daily-button").addEventListener("click", refreshDailyReport);
 refreshDailyReport();
+function resetMenuForm() {
+  const form = document.getElementById("menu-add-form");
+  editingMenuId = null;
+  form.reset();
+  form.elements.amount.value = "1";
+  form.querySelector("[type='submit']").textContent = "＋ เพิ่มเมนู";
+  document.getElementById("menu-edit-cancel").hidden = true;
+  document.getElementById("menu-manager-description").textContent = "เพิ่ม แก้ไข หรือลบเมนู";
+}
+
+document.getElementById("menu-edit-cancel").addEventListener("click", resetMenuForm);
 document.getElementById("menu-add-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -896,7 +1051,8 @@ document.getElementById("menu-add-form").addEventListener("submit", async event 
   const amount = Number(fields.get("amount"));
   const price = Number(fields.get("price"));
   const imageURL = String(fields.get("imageURL") || "").trim();
-  if (!productName || !Number.isInteger(amount) || amount < 1 || !Number.isFinite(price) || price < 0) {
+  if (!productName || !Number.isInteger(amount) || amount < 1 || amount > 999
+    || !Number.isFinite(price) || price < 0 || price > 100000) {
     notify("ข้อมูลเมนูยังไม่ผ่านด่านตรวจ ลองเช็กชื่อ จำนวน และราคานะ");
     return;
   }
@@ -909,25 +1065,25 @@ document.getElementById("menu-add-form").addEventListener("submit", async event 
     }
   }
   const submitButton = form.querySelector("[type='submit']");
+  const actionId = editingMenuId;
   submitButton.disabled = true;
   submitButton.textContent = "กำลังบันทึก...";
   try {
-    const response = await fetch("/menu", {
-      method: "POST",
+    const response = await fetch(actionId ? `/menu/${encodeURIComponent(actionId)}` : "/menu", {
+      method: actionId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productName, amount, price, imageURL })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "เพิ่มเมนูลงฐานข้อมูลไม่สำเร็จ");
-    form.reset();
-    form.elements.amount.value = "1";
+    if (!response.ok) throw new Error(result.error || (actionId ? "แก้ไขเมนูไม่สำเร็จ" : "เพิ่มเมนูลงฐานข้อมูลไม่สำเร็จ"));
+    resetMenuForm();
     await loadMenus();
-    notify(`เพิ่ม “${productName}” ลงฐานข้อมูลแล้ว ✨`);
+    notify(actionId ? `บันทึกการแก้ไข “${productName}” แล้ว ✨` : `เพิ่ม “${productName}” ลงฐานข้อมูลแล้ว ✨`);
   } catch (error) {
     notify(error.message);
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "＋ เพิ่มเมนู";
+    submitButton.textContent = editingMenuId ? "บันทึกการแก้ไข" : "＋ เพิ่มเมนู";
   }
 });
 document.getElementById("chaos-button").addEventListener("click", event => {
@@ -1067,7 +1223,7 @@ document.addEventListener("keydown", event => {
   const updateOpen = () => {
     const hour = new Date().getHours(), open = hour >= 9 && hour < 23;
     chip.classList.toggle("is-open", open);
-    chip.textContent = open ? "เปิดอยู่ตอนนี้ · ปิด 23:00" : "ปิดอยู่ · เปิดใหม่ 09:00";
+    chip.textContent = open ? "เปิดอยู่ตอนนี้ · ปิด 23:00" : "ปิดอยู่ · เปิดใหม่ 08:00";
   };
   updateOpen(); setInterval(updateOpen, 60000);
 

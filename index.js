@@ -1343,9 +1343,9 @@ document.addEventListener("keydown", event => {
         <h3>รับไก่ 30 วินาที</h3>
         <p>ลากเมาส์/นิ้ว หรือกดลูกศร ซ้าย–ขวา<br>🍗 +1 · 🍟 +2 · <b>67</b> +7 · 🌶️ −3 · 🥦 −2</p>
         <div class="pick" role="radiogroup" aria-label="เลือกตัวละคร">
-          <button type="button" data-who="nu" aria-pressed="true"><img src="imgs/nobg/pnu1.png" alt="นุ"><span>นุ</span></button>
-          <button type="button" data-who="sky" aria-pressed="false"><img src="imgs/nobg/psky1.png" alt="สกาย"><span>สกาย</span></button>
-          <button type="button" data-who="yell" aria-pressed="false"><img src="imgs/nobg/pyell1.png" alt="เยล"><span>เยล</span></button>
+          <button type="button" data-who="nu" aria-pressed="true"><img src="images/_pnu1.png" alt="นุ"><span>นุ</span></button>
+          <button type="button" data-who="sky" aria-pressed="false"><img src="images/_psky1.png" alt="สกาย"><span>สกาย</span></button>
+          <button type="button" data-who="yell" aria-pressed="false"><img src="images/_pyell1.png" alt="เยล"><span>เยล</span></button>
         </div>
         <button class="btn btn--lime" id="c-start" type="button">เริ่มเกม ▶</button>
       </div>
@@ -1471,7 +1471,7 @@ document.addEventListener("keydown", event => {
       extreme: { speed: 1.7, spawn: .3, acceleration: .02 },
       67: { speed: 2.3, spawn: .18, acceleration: .025 }
     };
-    const src = { nu: "imgs/nobg/pnu1.png", sky: "imgs/nobg/psky1.png", yell: "imgs/nobg/pyell1.png" };
+    const src = { nu: "images/_pnu1.png", sky: "images/_psky1.png", yell: "images/_pyell1.png" };
     const img = {}; Object.keys(src).forEach(k => { img[k] = new Image(); img[k].src = src[k]; });
     const types = [{ e: "🍗", p: 1, w: 48, s: 1 }, { e: "🍟", p: 2, w: 22, s: 1.15 }, { e: "🌶️", p: -3, w: 14, s: 1.2 }, { e: "🥦", p: -2, w: 12, s: 1.1 }, { e: "67", p: 7, w: 4, s: 1.5, gold: true }];
     let who = "nu", running = false, round67Mode = false, score = 0, time = 30, px = W / 2, items = [], pops = [], last = 0, spawn = 0, raf = 0, dir = 0;
@@ -1562,7 +1562,7 @@ document.addEventListener("keydown", event => {
       const deck = shuffle(pairs.flatMap(pair => [pair, pair]));
       $("#m-moves").textContent = 0; $("#m-time").textContent = 0; $("#m-time-label").textContent = timeLimit ? "เหลือเวลา" : "เวลา";
       $("#m-msg").textContent = `จับคู่รูปให้ครบ ${pairsToMatch} คู่${timeLimit ? ` · จำกัดเวลา ${timeLimit} วินาที` : " · ยิ่งเปิดน้อย ยิ่งได้ AURA เยอะ"}`;
-      grid.innerHTML = deck.map((pair, i) => `<button type="button" class="mc" data-k="${pair.id}" aria-label="การ์ดใบที่ ${i + 1}"><span class="mc__in"><span class="mc__f">67</span><span class="mc__b"><img src="imgs/${pair.key}.png" alt="${names[keys.indexOf(pair.key)]}"><span class="mc__variant">${pair.variant}</span></span></span></button>`).join("");
+      grid.innerHTML = deck.map((pair, i) => `<button type="button" class="mc" data-k="${pair.id}" aria-label="การ์ดใบที่ ${i + 1}"><span class="mc__in"><span class="mc__f">67</span><span class="mc__b"><img src="images/${pair.key}.png" alt="${names[keys.indexOf(pair.key)]}"><span class="mc__variant">${pair.variant}</span></span></span></button>`).join("");
     }
     grid.addEventListener("click", e => {
       const c = e.target.closest(".mc"); if (!c || lock || c.classList.contains("is-open") || c.classList.contains("is-done")) return;
